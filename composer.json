@@ -1,0 +1,34 @@
+{
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "aegypius",
+            "email": "git@aegypius.com"
+        }
+    ],
+    "scripts": {},
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "ext-dom": "*",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^12.1",
+        "symplify/easy-coding-standard": "^12"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    }
+}

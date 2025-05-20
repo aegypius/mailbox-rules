@@ -1,0 +1,42 @@
+name: Continuous Integration
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    coding-standards:
+        name: Coding Standards
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Check for coding-standards
+              uses: dagger/dagger-for-github@8.0.0
+              with:
+                  version: "latest"
+                  verb: call
+                  args: check-coding-standards
+
+    test:
+        name: Tests
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Check for coding-standards
+              uses: dagger/dagger-for-github@8.0.0
+              with:
+                  version: "latest"
+                  verb: call
+                  args: test
