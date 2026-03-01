@@ -456,24 +456,80 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
+## Phase 9: Advanced Actions ✅
+
+### Task 9.1: Implement CopyToFolder Action ✅
+**Red:**
+- Write tests for `CopyToFolder`:
+  - Copy message to target folder
+  - Original message remains in source folder
+  - Support different folder names
+
+**Green:**
+- Create `src/Action/CopyToFolder.php`
+- Implement using `Message->copy(folder)`
+- Requires IMAP UIDPLUS capability
+- Create global helper function (if needed)
+
+**Refactor:**
+- Error handling for unsupported UIDPLUS
+- Documentation and examples
+
+---
+
+### Task 9.2: Implement Delete and MoveToTrash Actions ✅
+**Red:**
+- Write tests for `Delete`:
+  - Permanent message deletion
+  - Test with/without immediate expunge
+  - Safety warning in documentation
+- Write tests for `MoveToTrash`:
+  - Move to trash folder (default: "Trash")
+  - Support custom trash folder names
+  - Test different provider conventions (Gmail, Exchange)
+
+**Green:**
+- Create `src/Action/Delete.php`
+  - Uses `Message->delete(expunge)`
+  - Default: `expunge = true` (immediate permanent deletion)
+- Create `src/Action/MoveToTrash.php`
+  - Uses `Message->move(trashFolder, expunge)`
+  - Default: `trashFolder = "Trash"`, `expunge = false`
+  - Configurable for different providers
+
+**Refactor:**
+- Safety warnings for Delete action
+- Document trash folder naming conventions
+- Add examples for different email providers
+
+---
+
+### Task 9.3: Implement MarkAsUnread and Unflag Actions ✅
+**Red:**
+- Write tests for `MarkAsUnread`:
+  - Remove \Seen flag from message
+  - Opposite of MarkAsRead
+- Write tests for `Unflag`:
+  - Remove \Flagged flag from message
+  - Opposite of Flag
+
+**Green:**
+- Create `src/Action/MarkAsUnread.php`
+  - Uses `Message->markUnread()`
+  - Removes \Seen flag
+- Create `src/Action/Unflag.php`
+  - Uses `Message->unmarkFlagged()`
+  - Removes \Flagged flag
+
+**Refactor:**
+- Consistent with existing flag actions
+- Documentation and examples
+
+---
+
 ## Future Enhancements
 
 The following features are documented in `SPECIFICATION.md` but not yet implemented:
-
-### Phase 9: Advanced Actions (Not Implemented)
-
-#### Task 9.1: Implement Copy Action
-- `CopyToFolder(folder)` - Copy message to folder (vs. move)
-- Keep original message in place
-
-#### Task 9.2: Implement Delete/Trash Actions
-- `Delete()` - Permanently delete message
-- `MoveToTrash()` - Move to trash folder
-- Add safety confirmation for permanent deletes
-
-#### Task 9.3: Implement Unflag/Unread Actions
-- `MarkAsUnread()` - Remove read flag
-- `Unflag()` - Remove flag from message
 
 ### Phase 10: Advanced Features (Not Implemented)
 
