@@ -2,9 +2,9 @@
 
 This document breaks down the Email Rule Matching Specification into small, testable tasks following Test-Driven Development (TDD) principles.
 
-## Phase 1: Core Matcher Infrastructure
+## Phase 1: Core Matcher Infrastructure ✅
 
-### Task 1.1: Create Matcher Interface
+### Task 1.1: Create Matcher Interface ✅
 **Red:**
 - Write test for `Matcher` interface with `matches(Message): bool` method
 - Test should verify a concrete matcher implementation
@@ -19,7 +19,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 1.2: Implement `any()` Matcher
+### Task 1.2: Implement `any()` Matcher ✅
 **Red:**
 - Write test: `any()` matcher should match all messages
 - Test with various message types
@@ -35,7 +35,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 1.3: Implement Pattern Matching Utility
+### Task 1.3: Implement Pattern Matching Utility ✅
 **Red:**
 - Write tests for pattern matching:
   - Exact match: `"user@example.com"`
@@ -54,9 +54,47 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-## Phase 2: Basic Matchers
+## Phase 2: Enhanced Rule Function
 
-### Task 2.1: Implement `from()` Matcher
+### Task 2.1: Update `rule()` Function Signature
+**Red:**
+- Write tests for new `rule()` signatures:
+  - `rule(name, when: matcher, then: callable)`
+  - `rule(name, callback)` (backward compatibility)
+  - Verify both signatures create valid `Rule` objects
+
+**Green:**
+- Modify `rule()` function in `src/functions.php`
+- Support both old and new signatures
+- Create appropriate `Rule` object
+
+**Refactor:**
+- Clean up parameter handling
+- Add type hints and documentation
+
+---
+
+### Task 2.2: Update `Rule` Model
+**Red:**
+- Write tests for `Rule` executing with matcher:
+  - Rule matches and executes actions
+  - Rule doesn't match and skips actions
+  - Rule with `any()` always executes
+
+**Green:**
+- Modify `src/Model/Rule.php`
+- Add matcher evaluation logic
+- Integrate matcher into rule execution
+
+**Refactor:**
+- Ensure backward compatibility
+- Clean up rule execution flow
+
+---
+
+## Phase 3: Basic Matchers
+
+### Task 3.1: Implement `from()` Matcher
 **Red:**
 - Write tests for `from()` matcher:
   - Exact email match
@@ -76,7 +114,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 2.2: Implement `to()` Matcher
+### Task 3.2: Implement `to()` Matcher
 **Red:**
 - Write tests for `to()` matcher:
   - Single recipient match
@@ -94,7 +132,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 2.3: Implement `subject()` Matcher
+### Task 3.3: Implement `subject()` Matcher
 **Red:**
 - Write tests for `subject()` matcher:
   - Exact match
@@ -112,9 +150,9 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-## Phase 3: Logical Combinators
+## Phase 4: Logical Combinators
 
-### Task 3.1: Implement `allOf()` Combinator (AND)
+### Task 4.1: Implement `allOf()` Combinator (AND)
 **Red:**
 - Write tests for `allOf()`:
   - Empty matchers (should match all?)
@@ -133,7 +171,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 3.2: Implement `anyOf()` Combinator (OR)
+### Task 4.2: Implement `anyOf()` Combinator (OR)
 **Red:**
 - Write tests for `anyOf()`:
   - Empty matchers (should match none?)
@@ -151,7 +189,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 3.3: Implement `not()` Combinator (NOT)
+### Task 4.3: Implement `not()` Combinator (NOT)
 **Red:**
 - Write tests for `not()`:
   - Negating a matching matcher
@@ -165,44 +203,6 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 **Refactor:**
 - Ensure consistent behavior
-
----
-
-## Phase 4: Enhanced Rule Function
-
-### Task 4.1: Update `rule()` Function Signature
-**Red:**
-- Write tests for new `rule()` signatures:
-  - `rule(name, when: matcher, then: callable)`
-  - `rule(name, callback)` (backward compatibility)
-  - Verify both signatures create valid `Rule` objects
-
-**Green:**
-- Modify `rule()` function in `src/functions.php`
-- Support both old and new signatures
-- Create appropriate `Rule` object
-
-**Refactor:**
-- Clean up parameter handling
-- Add type hints and documentation
-
----
-
-### Task 4.2: Update `Rule` Model
-**Red:**
-- Write tests for `Rule` executing with matcher:
-  - Rule matches and executes actions
-  - Rule doesn't match and skips actions
-  - Rule with `any()` always executes
-
-**Green:**
-- Modify `src/Model/Rule.php`
-- Add matcher evaluation logic
-- Integrate matcher into rule execution
-
-**Refactor:**
-- Ensure backward compatibility
-- Clean up rule execution flow
 
 ---
 
