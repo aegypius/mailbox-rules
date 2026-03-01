@@ -10,6 +10,7 @@ use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\AnyOfMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\Matcher;
+use MailboxRules\Matcher\NotMatcher;
 use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Matcher\ToMatcher;
 use MailboxRules\Model\Rule;
@@ -154,4 +155,15 @@ function allOf(Matcher ...$matchers): Matcher
 function anyOf(Matcher ...$matchers): Matcher
 {
     return new AnyOfMatcher(...$matchers);
+}
+
+/**
+ * Create a matcher that inverts the result of another matcher (logical NOT).
+ *
+ * @param Matcher $matcher The matcher to invert
+ * @return Matcher A matcher that returns the opposite result.
+ */
+function not(Matcher $matcher): Matcher
+{
+    return new NotMatcher($matcher);
 }
