@@ -224,6 +224,43 @@ Currently minimal test coverage. When adding tests:
 - Follow PHPUnit 12.x conventions
 - Ensure coverage metadata is present
 
+### Test Quality Requirements
+
+**CRITICAL**: Tests must NEVER produce warnings, notices, or risky test markers:
+
+1. **NO PHPUnit Notices**: Configure mocks properly with expectations
+   - ❌ BAD: `$mock = $this->createMock(Foo::class);` without expectations
+   - ✅ GOOD: Add `#[AllowMockObjectsWithoutExpectations]` attribute OR configure expectations
+
+2. **NO Risky Tests**: All tests must define code coverage targets
+   - ❌ BAD: Test without `#[CoversClass]` or `#[CoversFunction]` attribute
+   - ✅ GOOD: Add `#[CoversClass(ClassName::class)]` or `#[CoversFunction('namespace\function')]`
+
+3. **Zero Tolerance**: Test suite must exit with status 0
+   - Any warnings, notices, or risky tests = FAILED test run
+   - Fix immediately before considering work complete
+
+Example proper test:
+
+```php
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+
+#[CoversClass(MyClass::class)]
+#[AllowMockObjectsWithoutExpectations] // Only if mock has no expectations
+final class MyClassTest extends TestCase
+{
+    public function testSomething(): void
+    {
+        $mock = $this->createMock(Dependency::class);
+        // Either add expectations OR use the attribute above
+
+        $sut = new MyClass($mock);
+        self::assertTrue($sut->doSomething());
+    }
+}
+```
+
 ## Important Gotchas
 
 ### Environment Variables
