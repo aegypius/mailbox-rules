@@ -17,6 +17,10 @@ Guide for AI agents working in the mailbox-rules codebase.
 - Rector for automated refactoring and PHP upgrades
 - Dagger for CI/CD pipeline
 
+**Documentation:**
+- **[Specification](docs/SPECIFICATION.md)**: Declarative DSL design for email rule matching with matchers and actions
+- **[Implementation Tasks](docs/TASKS.md)**: TDD-based breakdown of implementation tasks following Red-Green-Refactor principles
+
 ## Essential Commands
 
 ### Development

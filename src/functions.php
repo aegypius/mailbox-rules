@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+namespace MailboxRules;
+
 use DirectoryTree\ImapEngine\Message;
-use MailboxRules\Action;
-use MailboxRules\MailboxFactory;
+use MailboxRules\Matcher\AnyMatcher;
+use MailboxRules\Matcher\Matcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
 use MailboxRules\ValueObject\Dsn;
@@ -49,4 +51,14 @@ function mailbox(string|Dsn $dsn, iterable $rules): Rules
 function rule(string $name, \Closure $callback): Rule
 {
     return new Rule($name, $callback);
+}
+
+/**
+ * Create a matcher that matches all messages.
+ *
+ * @return Matcher A matcher that always returns true.
+ */
+function any(): Matcher
+{
+    return new AnyMatcher();
 }
