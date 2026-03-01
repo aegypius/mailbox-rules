@@ -493,6 +493,172 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 
 ---
 
+### Phase 11: Protocol Abstraction (Not Implemented)
+
+#### Task 11.1: Create Message Abstraction Layer
+**Purpose:** Decouple matchers and actions from IMAP-specific Message implementation
+
+**Design Goals:**
+- Protocol-agnostic message interface
+- Support both IMAP (current) and JMAP (future)
+- Maintain backward compatibility with existing code
+- Zero-cost abstraction (no performance penalty)
+
+**Red:**
+- Write tests for abstract `MessageInterface`:
+  - Test all message property accessors (from, to, cc, bcc, subject, date, size)
+  - Test body content access (text, html)
+  - Test attachment operations
+  - Mock both IMAP and JMAP implementations
+- Write tests for `ImapMessageAdapter`:
+  - Wraps existing `DirectoryTree\ImapEngine\Message`
+  - Implements `MessageInterface`
+  - No behavior changes from current implementation
+
+**Green:**
+- Create `src/Contract/MessageInterface.php`:
+  ```php
+  interface MessageInterface {
+    public function from(): ?Address;
+    public function to(): array<Address>;
+    public function cc(): array<Address>;
+    public function bcc(): array<Address>;
+    public function subject(): ?string;
+    public function date(): CarbonInterface;
+    public function size(): int;
+    public function text(): ?string;
+    public function html(): ?string;
+    public function hasAttachments(): bool;
+    public function attachments(): array<AttachmentInterface>;
+    // Action methods
+    public function move(string $folder): void;
+    public function copy(string $folder): void;
+    public function flag(string $flag): void;
+    public function unflag(string $flag): void;
+    public function markAsRead(): void;
+    public function markAsUnread(): void;
+    public function delete(): void;
+  }
+  ```
+- Create `src/Adapter/ImapMessageAdapter.php`:
+  - Wraps `DirectoryTree\ImapEngine\Message`
+  - Delegates all calls to wrapped instance
+  - No additional logic
+- Update all matchers to use `MessageInterface` instead of concrete `Message` class
+- Update all actions to use `MessageInterface`
+
+**Refactor:**
+- Ensure all tests pass with adapter
+- Document adapter pattern
+- Add migration guide for custom extensions
+
+---
+
+#### Task 11.2: Create Attachment Abstraction Layer
+**Purpose:** Decouple attachment handling from IMAP-specific implementation
+
+**Red:**
+- Write tests for abstract `AttachmentInterface`:
+  - Content type accessor
+  - Filename accessor
+  - Extension accessor
+  - Size accessor
+  - Content retrieval
+- Write tests for `ImapAttachmentAdapter`:
+  - Wraps existing `DirectoryTree\ImapEngine\Attachment`
+  - Implements `AttachmentInterface`
+
+**Green:**
+- Create `src/Contract/AttachmentInterface.php`:
+  ```php
+  interface AttachmentInterface {
+    public function contentType(): string;
+    public function filename(): ?string;
+    public function extension(): ?string;
+    public function size(): int;
+    public function content(): string;
+  }
+  ```
+- Create `src/Adapter/ImapAttachmentAdapter.php`
+- Update `AttachmentTypeMatcher` to use `AttachmentInterface`
+- Update `MessageInterface->attachments()` to return `array<AttachmentInterface>`
+
+**Refactor:**
+- Ensure type consistency
+- Update documentation
+
+---
+
+#### Task 11.3: Implement JMAP Support
+**Purpose:** Add JMAP protocol support alongside existing IMAP support
+
+**Prerequisites:**
+- Task 11.1 and 11.2 completed (abstraction layer in place)
+- Choose JMAP client library (research required)
+
+**Red:**
+- Write tests for `JmapMessageAdapter`:
+  - Implements `MessageInterface`
+  - Maps JMAP message properties to interface
+  - Handles JMAP-specific quirks
+- Write tests for `JmapAttachmentAdapter`:
+  - Implements `AttachmentInterface`
+  - Maps JMAP attachment properties
+- Write tests for `JmapMailboxFactory`:
+  - Creates mailbox connection using JMAP
+  - Similar API to existing `MailboxFactory`
+
+**Green:**
+- Research and add JMAP client library dependency
+  - Evaluate: `jmap-client/jmap-client`, custom implementation, or other
+- Create `src/Adapter/JmapMessageAdapter.php`
+- Create `src/Adapter/JmapAttachmentAdapter.php`
+- Create `src/JmapMailboxFactory.php`
+- Update DSN parsing to support `jmap://` scheme:
+  - `jmap://user:token@example.com`
+  - JMAP uses tokens, not passwords
+- Implement JMAP action methods (move, flag, delete, etc.)
+
+**Refactor:**
+- Abstract common mailbox operations
+- Document JMAP-specific configuration
+- Add JMAP examples to documentation
+- Performance testing (JMAP should be faster than IMAP)
+
+**Benefits:**
+- Modern API (JMAP is stateless, JSON-based)
+- Better performance (batch operations, less chattiness)
+- Better mobile/web support
+- Future-proof protocol
+
+**Migration Path:**
+1. Phase 11.1-11.2: Add abstraction layer (no breaking changes)
+2. Phase 11.3: Add JMAP support (opt-in)
+3. Users can choose protocol via DSN: `imap://` vs `jmap://`
+4. All existing rules work unchanged with either protocol
+
+---
+
+### Phase 12: Performance & Optimization (Not Implemented)
+
+#### Task 12.1: Implement Matcher Caching
+- Cache compiled regex patterns in PatternMatcher
+- Cache message property access (subject, from, to)
+- Benchmark performance improvements
+
+#### Task 12.2: Implement Batch Operations
+- Process multiple messages in parallel
+- Batch IMAP/JMAP commands
+- Configurable concurrency limits
+
+#### Task 12.3: Implement Rule Statistics
+- Track rule execution counts
+- Track matcher performance
+- Track action success/failure rates
+- Export metrics for monitoring
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -538,12 +704,28 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 - ✅ Backward compatibility maintained
 
 ### Not Implemented (Future Enhancements)
+
+**Phase 9: Advanced Actions**
 - ❌ Copy action: CopyToFolder()
 - ❌ Delete/trash actions: Delete(), MoveToTrash()
 - ❌ Mark as unread/unflag: MarkAsUnread(), Unflag()
+
+**Phase 10: Advanced Features**
 - ❌ Dry-run/preview mode
 - ❌ Rule priorities and short-circuiting
 - ❌ Rule pre/post conditions
+
+**Phase 11: Protocol Abstraction & JMAP Support**
+- ❌ MessageInterface abstraction layer
+- ❌ AttachmentInterface abstraction layer
+- ❌ ImapMessageAdapter and ImapAttachmentAdapter
+- ❌ JMAP protocol support (JmapMessageAdapter, JmapAttachmentAdapter)
+- ❌ Multi-protocol support via DSN (imap:// and jmap://)
+
+**Phase 12: Performance & Optimization**
+- ❌ Matcher caching (regex patterns, message properties)
+- ❌ Batch operations and parallel processing
+- ❌ Rule execution statistics and metrics
 
 ---
 
