@@ -7,6 +7,7 @@ namespace MailboxRules;
 use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
+use MailboxRules\Matcher\AnyOfMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Matcher\SubjectMatcher;
@@ -140,4 +141,17 @@ function subject(string $pattern): Matcher
 function allOf(Matcher ...$matchers): Matcher
 {
     return new AllOfMatcher(...$matchers);
+}
+
+/**
+ * Create a matcher that matches when ANY provided matcher matches (logical OR).
+ *
+ * Short-circuits on first success for efficiency.
+ *
+ * @param Matcher ...$matchers One or more matchers to combine with OR logic
+ * @return Matcher A matcher that requires at least one condition to be true.
+ */
+function anyOf(Matcher ...$matchers): Matcher
+{
+    return new AnyOfMatcher(...$matchers);
 }
