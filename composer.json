@@ -8,19 +8,36 @@
         }
     ],
     "scripts": {},
+    "autoload": {
+        "psr-4": {
+            "MailboxRules\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
         }
     },
     "require": {
-        "php": "^8.3"
+        "php": "^8.3",
+        "directorytree/imapengine": "^1.13",
+        "monolog/monolog": "^3.9",
+        "symfony/config": "^7.2",
+        "symfony/console": "^7.2",
+        "symfony/dependency-injection": "^7.2",
+        "symfony/runtime": "^7.2",
+        "zenstruck/callback": "^1.5"
     },
     "require-dev": {
         "ext-dom": "*",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^12.1",
+        "rector/rector": "^2.1",
+        "symfony/var-dumper": "^7.2",
         "symplify/easy-coding-standard": "^12"
     },
     "config": {
@@ -28,7 +45,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "symfony/runtime": true
         }
     }
 }
