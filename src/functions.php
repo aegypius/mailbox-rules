@@ -8,6 +8,7 @@ use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\Matcher;
+use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Matcher\ToMatcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
@@ -112,4 +113,17 @@ function from(string $pattern): Matcher
 function to(string $pattern): Matcher
 {
     return new ToMatcher($pattern);
+}
+
+/**
+ * Create a matcher that matches messages based on subject line.
+ *
+ * Supports exact matches, wildcards, and regex patterns (case-insensitive).
+ *
+ * @param string $pattern Subject pattern to match (exact, wildcard, or regex)
+ * @return Matcher A matcher for the message subject.
+ */
+function subject(string $pattern): Matcher
+{
+    return new SubjectMatcher($pattern);
 }
