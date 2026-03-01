@@ -531,21 +531,56 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 The following features are documented in `SPECIFICATION.md` but not yet implemented:
 
-### Phase 10: Advanced Features (Not Implemented)
+### Phase 10: Advanced Features ✅ (Partially Complete)
 
-#### Task 10.1: Implement Dry-Run Mode
-- `preview()` - Test rules without applying actions
-- Show what would happen for each message
-- Useful for debugging rule configurations
+#### Task 10.1: Implement Dry-Run Mode ✅
+**Red:**
+- Write tests for `Rules::preview()`:
+  - Returns PreviewResult for each matched (message, rule) pair
+  - Contains original message and list of actions that would execute
+  - No actions actually executed (read-only operation)
+  - Empty results when no rules match
+- Write tests for CLI `--dry-run` option:
+  - Shows formatted preview output
+  - Displays rule name, message subject, action list
+  - Handles messages without subjects gracefully
+  - No actual IMAP operations performed
 
-#### Task 10.2: Implement Rule Priorities
-- Add priority/ordering to rules
-- Allow short-circuit on first match
-- Stop processing after specific rule matches
+**Green:**
+- Create `src/Model/PreviewResult.php`:
+  - Readonly value object
+  - Properties: `Message $message`, `Rule $rule`, `array<Action> $actions`
+  - Represents one (message, rule) match with its actions
+- Add `Rules::preview()` method:
+  - Yields generator of PreviewResult objects
+  - Similar to `apply()` but doesn't execute actions
+  - Collects actions via `iterator_to_array()`
+- Update `src/Console/ApplyCommand.php`:
+  - Add `--dry-run` option
+  - When enabled: call `preview()` and format output
+  - When disabled: call `apply()` as before (unchanged)
+  - Format: rule name, subject (or "(no subject)"), action class names
+- Create test suite:
+  - `tests/Model/RulesPreviewTest.php` (5 tests, 18 assertions)
+  - `tests/Console/ApplyCommandTest.php` (3 tests, 18 assertions)
+  - Uses dynamic fixture generation (temporary PHP files)
+  - Tests pass with 0 PHPUnit notices
 
-#### Task 10.3: Implement Rule Conditions
-- Add pre-conditions to rules (e.g., only run on weekdays)
-- Add post-conditions (e.g., verify action succeeded)
+**Refactor:**
+- Documented dry-run usage in README
+- Added integration tests using real RuleFileLoader
+- Total: 243 tests, 339 assertions (100% passing)
+
+#### Task 10.2: Rule Priorities ❌ (Cancelled)
+- ❌ Not implemented (user request)
+- Feature: Add priority/ordering to rules
+- Feature: Allow short-circuit on first match
+- Feature: Stop processing after specific rule matches
+
+#### Task 10.3: Rule Conditions ❌ (Cancelled)
+- ❌ Not implemented (user request)
+- Feature: Add pre-conditions to rules (e.g., only run on weekdays)
+- Feature: Add post-conditions (e.g., verify action succeeded)
 
 ---
 
@@ -742,9 +777,9 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 
 ## Implementation Summary
 
-### Completed (Phases 1-8)
-- ✅ 25 tasks completed (20 core + 5 additional matchers)
-- ✅ 225 tests, 267 assertions (100% passing)
+### Completed (Phases 1-9 + 10.1)
+- ✅ 29 tasks completed (20 core + 5 matchers + 3 advanced actions + 1 dry-run)
+- ✅ 243 tests, 339 assertions (100% passing)
 - ✅ Core DSL fully functional
 - ✅ Pattern matching (exact, wildcard, regex)
 - ✅ Basic matchers: any(), from(), to(), subject()
@@ -754,22 +789,18 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 - ✅ Recipient matchers: cc(), bcc(), recipient()
 - ✅ Body content matcher: body()
 - ✅ Logical combinators: allOf(), anyOf(), not()
-- ✅ Actions: MoveToFolder, MarkAsRead, Flag
+- ✅ Actions: MoveToFolder, MarkAsRead, Flag, CopyToFolder, Delete, MoveToTrash, MarkAsUnread, Unflag
 - ✅ Helper functions: chain(), env()
+- ✅ Dry-run mode: Rules::preview() + CLI --dry-run option
 - ✅ Integration tests and documentation
 - ✅ Backward compatibility maintained
 
 ### Not Implemented (Future Enhancements)
 
-**Phase 9: Advanced Actions**
-- ❌ Copy action: CopyToFolder()
-- ❌ Delete/trash actions: Delete(), MoveToTrash()
-- ❌ Mark as unread/unflag: MarkAsUnread(), Unflag()
-
 **Phase 10: Advanced Features**
-- ❌ Dry-run/preview mode
-- ❌ Rule priorities and short-circuiting
-- ❌ Rule pre/post conditions
+- ✅ Dry-run/preview mode (Task 10.1 complete)
+- ❌ Rule priorities and short-circuiting (Task 10.2 cancelled)
+- ❌ Rule pre/post conditions (Task 10.3 cancelled)
 
 **Phase 11: Protocol Abstraction & JMAP Support**
 - ❌ MessageInterface abstraction layer
