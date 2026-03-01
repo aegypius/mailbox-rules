@@ -63,22 +63,26 @@ function mailbox(string|Dsn $dsn, iterable $rules): Rules
  *
  * Supports two signatures:
  * 1. Legacy: rule(name, callback) - backward compatibility
- * 2. Matcher-based: rule(name, when: matcher, then: callable)
+ * 2. Matcher-based: rule(name, when: matcher, then: callable|iterable)
  *
  * @param string $name The name of the rule.
  * @param \Closure(Message): iterable<Action>|null $callback The callback (legacy signature).
  * @param Matcher|null $when The matcher to evaluate (new signature).
- * @param \Closure(Message): iterable<Action>|null $then The action callback (new signature).
+ * @param \Closure(Message): iterable<Action>|iterable<Action>|null $then The action callback or iterable (new signature).
  * @return Rule The created Rule object.
  */
 function rule(
     string $name,
     ?\Closure $callback = null,
     ?Matcher $when = null,
-    ?\Closure $then = null
+    \Closure|iterable|null $then = null
 ): Rule {
-    // New signature: rule(name, when: matcher, then: callable)
+    // New signature: rule(name, when: matcher, then: callable|iterable)
     if ($when !== null && $then !== null) {
+        // If $then is already iterable (Generator, array), wrap it in a closure
+        if (!$then instanceof \Closure) {
+            $then = static fn () => $then;
+        }
         return new Rule($name, $when, $then);
     }
 
