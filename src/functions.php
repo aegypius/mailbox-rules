@@ -11,6 +11,7 @@ use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\AnyOfMatcher;
 use MailboxRules\Matcher\AttachmentTypeMatcher;
 use MailboxRules\Matcher\BccMatcher;
+use MailboxRules\Matcher\BodyMatcher;
 use MailboxRules\Matcher\CcMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\HasAttachmentMatcher;
@@ -335,4 +336,23 @@ function bcc(string $pattern): Matcher
 function recipient(string $pattern): Matcher
 {
     return new RecipientMatcher($pattern);
+}
+
+/**
+ * Match messages by body content.
+ *
+ * Searches both plain text and HTML body content.
+ * Returns true if the pattern matches either format.
+ *
+ * Supports wildcards (*keyword*), exact matches, and regex patterns (/pattern/i).
+ * Matches are case-insensitive.
+ *
+ * Note: Use wildcards for substring matching (e.g., '*invoice*' matches "Your invoice is ready").
+ *
+ * @param string $pattern The pattern to match against message body content.
+ * @return Matcher A matcher for message body content.
+ */
+function body(string $pattern): Matcher
+{
+    return new BodyMatcher($pattern);
 }
