@@ -8,24 +8,23 @@ use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action;
 
 /**
- * @phpstan-import-type ActionConditionClosure from WithCondition
+ * Action that moves a message to the Trash folder.
+ *
+ * This action provides recoverable deletion by moving messages to a trash folder.
+ * The default folder name is "Trash", but can be customized.
+ *
+ * Common trash folder names: "Trash", "Deleted Items", "Deleted Messages", "[Gmail]/Trash"
  */
 final readonly class MoveToTrash implements Action
 {
-    use WithCondition;
-
     public function __construct(
-        /** @param ActionConditionClosure $condition */
-        \Closure|null $condition = null,
+        private string $trashFolder = 'Trash',
+        private bool $expunge = false,
     ) {
-        $this->condition = $condition ?? fn (): bool => true;
     }
 
     public function __invoke(Message $message): void
     {
-        if ($this->check($message)) {
-            // Logic to move the message to trash
-            echo "Message moved to trash.";
-        }
+        $message->move($this->trashFolder, $this->expunge);
     }
 }
