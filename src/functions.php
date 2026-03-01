@@ -8,6 +8,7 @@ use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\Matcher;
+use MailboxRules\Matcher\ToMatcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
 use MailboxRules\ValueObject\Dsn;
@@ -97,4 +98,18 @@ function any(): Matcher
 function from(string $pattern): Matcher
 {
     return new FromMatcher($pattern);
+}
+
+/**
+ * Create a matcher that matches messages to specific recipients.
+ *
+ * Matches if ANY recipient matches the pattern.
+ * Supports exact matches, wildcards, and regex patterns (case-insensitive).
+ *
+ * @param string $pattern Email pattern to match (exact, wildcard, or regex)
+ * @return Matcher A matcher for recipient email addresses.
+ */
+function to(string $pattern): Matcher
+{
+    return new ToMatcher($pattern);
 }
