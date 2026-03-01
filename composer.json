@@ -22,7 +22,7 @@
         }
     },
     "require": {
-        "php": "^8.3",
+        "php": "^8.5",
         "directorytree/imapengine": "^1.13",
         "monolog/monolog": "^3.9",
         "symfony/config": "^7.2",

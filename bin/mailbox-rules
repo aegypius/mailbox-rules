@@ -1,0 +1,35 @@
+#!/usr/bin/env php
+<?php
+use MailboxRules\Console\ApplyCommand;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Console\Application;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+
+if (!is_dir(dirname(__DIR__) . "/vendor")) {
+    throw new LogicException(
+        'Dependencies are missing. Try running "composer install".'
+    );
+}
+
+if (!is_file(dirname(__DIR__) . "/vendor/autoload_runtime.php")) {
+    throw new LogicException(
+        'Symfony Runtime is missing. Try running "composer require symfony/runtime".'
+    );
+}
+
+require_once dirname(__DIR__) . "/vendor/autoload_runtime.php";
+
+ini_set("memory_limit", "250M");
+
+return function (array $context) {
+    $container = new ContainerBuilder();
+    $loader = new PhpFileLoader(
+        $container,
+        new FileLocator(__DIR__ . "/../src")
+    );
+    $loader->load("services.php");
+    $container->compile();
+
+    return $container->get(Application::class);
+};

@@ -26,12 +26,12 @@ class PhpProject
      * @throws CompileError
      * @throws InvalidArgumentException
      */
-    private function vendors(Directory $source): Directory
+    private function vendors(Directory $directory): Directory
     {
         return dag()
             ->container()
             ->from("composer:2")
-            ->withMountedDirectory("/app", $source)
+            ->withMountedDirectory("/app", $directory)
             ->withWorkdir("/app")
             ->withExec([
                 "composer",
@@ -46,13 +46,13 @@ class PhpProject
     #[Doc("Check coding standards")]
     public function checkCodingStandards(
         #[DefaultPath("."), Ignore("**/vendor", "docs")]
-        Directory $source
+        Directory $directory
     ): Container {
         return dag()
             ->container()
             ->from("php:8.3-cli")
-            ->withMountedDirectory("/app", $source)
-            ->withDirectory("/app/vendor", $this->vendors($source))
+            ->withMountedDirectory("/app", $directory)
+            ->withDirectory("/app/vendor", $this->vendors($directory))
             ->withWorkdir("/app")
             ->withExec([
                 "./vendor/bin/ecs",
@@ -66,19 +66,19 @@ class PhpProject
     #[Doc("Run test-suite")]
     public function test(
         #[DefaultPath("."), Ignore("**/vendor", "docs")]
-        Directory $source,
+        Directory $directory,
         string|null $testSuite = null
     ): Container {
         $phpunit = ["./vendor/bin/phpunit"];
         if ($testSuite !== null) {
-            $phpunit[] = "--testsuite={$testSuite}";
+            $phpunit[] = '--testsuite=' . $testSuite;
         }
 
         return dag()
             ->container()
             ->from("php:8.3-cli")
-            ->withMountedDirectory("/app", $source)
-            ->withDirectory("/app/vendor", $this->vendors($source))
+            ->withMountedDirectory("/app", $directory)
+            ->withDirectory("/app/vendor", $this->vendors($directory))
             ->withWorkdir("/app")
             ->withExec($phpunit);
     }
