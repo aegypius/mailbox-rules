@@ -9,6 +9,8 @@ return function (ECSConfig $ecsConfig): void {
     $ecsConfig->paths([
         __DIR__ . '/src',
         __DIR__ . '/tests',
+        __DIR__ . '/my-rules.php',
+        __DIR__ . '/rules.php',
         __FILE__,
 
         # Add dagger module too
