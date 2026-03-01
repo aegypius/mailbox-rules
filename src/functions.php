@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MailboxRules;
 
 use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\Matcher;
@@ -126,4 +127,17 @@ function to(string $pattern): Matcher
 function subject(string $pattern): Matcher
 {
     return new SubjectMatcher($pattern);
+}
+
+/**
+ * Create a matcher that matches when ALL provided matchers match (logical AND).
+ *
+ * Short-circuits on first failure for efficiency.
+ *
+ * @param Matcher ...$matchers One or more matchers to combine with AND logic
+ * @return Matcher A matcher that requires all conditions to be true.
+ */
+function allOf(Matcher ...$matchers): Matcher
+{
+    return new AllOfMatcher(...$matchers);
 }
