@@ -167,3 +167,19 @@ function not(Matcher $matcher): Matcher
 {
     return new NotMatcher($matcher);
 }
+
+/**
+ * Create an iterable chain of actions.
+ *
+ * Provides a convenient way to yield multiple actions in sequence
+ * as shorthand for manually yielding each action.
+ *
+ * @param Action ...$actions Actions to chain together
+ * @return \Generator<Action> Generator yielding actions in order
+ */
+function chain(Action ...$actions): \Generator
+{
+    foreach ($actions as $action) {
+        yield $action;
+    }
+}
