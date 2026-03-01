@@ -26,14 +26,27 @@ final readonly class Rules
     private function doApply(Message $message): void
     {
         foreach ($this->rules as $rule) {
-            $actions = $rule($message);
-            foreach ($actions as $action) {
-                // Cast to callable for PHPStan - all Actions implement __invoke
-                /** @var callable $callableAction */
-                $callableAction = $action;
-                Callback::createFor($callableAction)->invokeAll(
-                    Parameter::union(...$this->useParameters($message))
-                );
+            try {
+                $actions = $rule($message);
+
+                // Materialize generator into array to avoid "already closed generator" error
+                // when actions modify the message (e.g., move/delete)
+                $actionsList = is_array($actions) ? $actions : iterator_to_array($actions, false);
+
+                foreach ($actionsList as $action) {
+                    // Cast to callable for PHPStan - all Actions implement __invoke
+                    /** @var callable $callableAction */
+                    $callableAction = $action;
+                    Callback::createFor($callableAction)->invokeAll(
+                        Parameter::union(...$this->useParameters($message))
+                    );
+                }
+            } catch (\Exception $e) {
+                if (str_contains($e->getMessage(), 'closed generator')) {
+                    $this->logger->warning("Skipping rule '{$rule->name}' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.");
+                    continue;
+                }
+                throw $e;
             }
         }
     }
