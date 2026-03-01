@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules;
 
+use Carbon\CarbonInterface;
 use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
@@ -11,6 +12,8 @@ use MailboxRules\Matcher\AnyOfMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Matcher\NotMatcher;
+use MailboxRules\Matcher\ReceivedAfterMatcher;
+use MailboxRules\Matcher\ReceivedBeforeMatcher;
 use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Matcher\ToMatcher;
 use MailboxRules\Model\Rule;
@@ -200,4 +203,30 @@ function env(string $name): string
     }
 
     return $value;
+}
+
+/**
+ * Create a matcher that matches messages received after a specific date/time.
+ *
+ * Supports absolute dates ("2024-01-15 12:00:00") and relative dates ("3 hours ago").
+ *
+ * @param CarbonInterface|string $datetime The cutoff date/time
+ * @return Matcher A matcher for messages received after the specified time.
+ */
+function receivedAfter(CarbonInterface|string $datetime): Matcher
+{
+    return new ReceivedAfterMatcher($datetime);
+}
+
+/**
+ * Create a matcher that matches messages received before a specific date/time.
+ *
+ * Supports absolute dates ("2024-01-15 12:00:00") and relative dates ("3 hours ago").
+ *
+ * @param CarbonInterface|string $datetime The cutoff date/time
+ * @return Matcher A matcher for messages received before the specified time.
+ */
+function receivedBefore(CarbonInterface|string $datetime): Matcher
+{
+    return new ReceivedBeforeMatcher($datetime);
 }
