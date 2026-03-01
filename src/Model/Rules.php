@@ -63,4 +63,44 @@ final readonly class Rules
     {
         $this->mailbox->inbox()->idle($this->doApply(...));
     }
+
+    /**
+     * Previews what actions would be executed for each message without actually executing them.
+     *
+     * This is a dry-run mode useful for testing rule configurations before applying them.
+     *
+     * @return list<PreviewResult> List of preview results showing messages, rules, and actions
+     */
+    public function preview(): array
+    {
+        $this->mailbox->connect();
+        $messageQuery = $this->mailbox->inbox()->messages()->withHeaders();
+        $results = [];
+
+        foreach ($messageQuery->get() as $message) {
+            assert($message instanceof Message);
+
+            foreach ($this->rules as $rule) {
+                // Evaluate the rule to get actions (but don't execute them)
+                $actions = $rule($message);
+                $actionsList = [];
+
+                // Collect actions without executing
+                foreach ($actions as $action) {
+                    $actionsList[] = $action;
+                }
+
+                // Only add result if rule matched (has actions)
+                if ($actionsList !== []) {
+                    $results[] = new PreviewResult(
+                        message: $message,
+                        ruleName: $rule->name,
+                        actions: $actionsList,
+                    );
+                }
+            }
+        }
+
+        return $results;
+    }
 }
