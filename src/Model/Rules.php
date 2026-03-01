@@ -64,22 +64,21 @@ final readonly class Rules
 
     public function apply(): void
     {
+        $this->logger->info('Connecting to mailbox...');
         $this->mailbox->connect();
-        $query = $this->mailbox->inbox()->messages()->withHeaders();
-        $chunkSize = 100;
-        $page = 1;
 
-        // Process messages in chunks using pagination
-        do {
-            $messages = $query->limit($chunkSize, $page)->get();
+        $this->logger->info('Fetching messages...');
+        // Process all messages directly without manual pagination
+        // The library handles this internally with its limit() method
+        $messages = $this->mailbox->inbox()->messages()->withHeaders()->get();
 
-            foreach ($messages as $message) {
-                assert($message instanceof Message);
-                $this->doApply($message);
-            }
+        $this->logger->info('Processing ' . count($messages) . ' messages');
+        foreach ($messages as $message) {
+            assert($message instanceof Message);
+            $this->doApply($message);
+        }
 
-            $page++;
-        } while ($messages->isNotEmpty());
+        $this->logger->info('Done processing messages');
     }
 
     public function watch(): void
