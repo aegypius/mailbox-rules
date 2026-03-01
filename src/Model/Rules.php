@@ -52,11 +52,21 @@ final readonly class Rules
     public function apply(): void
     {
         $this->mailbox->connect();
-        $messageQuery = $this->mailbox->inbox()->messages()->withHeaders();
-        foreach ($messageQuery->get() as $message) {
-            assert($message instanceof Message);
-            $this->doApply($message);
-        }
+        $query = $this->mailbox->inbox()->messages()->withHeaders();
+        $chunkSize = 100;
+        $page = 1;
+
+        // Process messages in chunks using pagination
+        do {
+            $messages = $query->limit($chunkSize, $page)->get();
+
+            foreach ($messages as $message) {
+                assert($message instanceof Message);
+                $this->doApply($message);
+            }
+
+            $page++;
+        } while ($messages->isNotEmpty());
     }
 
     public function watch(): void
@@ -74,10 +84,10 @@ final readonly class Rules
     public function preview(): array
     {
         $this->mailbox->connect();
-        $messageQuery = $this->mailbox->inbox()->messages()->withHeaders();
+        $query = $this->mailbox->inbox()->messages()->withHeaders()->limit(10);
         $results = [];
 
-        foreach ($messageQuery->get() as $message) {
+        foreach ($query->get() as $message) {
             assert($message instanceof Message);
 
             foreach ($this->rules as $rule) {
