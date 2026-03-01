@@ -342,36 +342,123 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
+## Phase 8: Additional Matchers ✅
+
+### Task 8.1: Implement Date/Time Matchers ✅
+**Red:**
+- Write tests for `receivedAfter()` matcher:
+  - Match messages received after specific date/time
+  - Support for Carbon instances and date strings
+  - Edge cases with timezone handling
+- Write tests for `receivedBefore()` matcher:
+  - Match messages received before specific date/time
+  - Same carbon/string support
+
+**Green:**
+- Create `src/Matcher/ReceivedAfterMatcher.php`
+- Create `src/Matcher/ReceivedBeforeMatcher.php`
+- Implement using `Message->date()` (Carbon instance)
+- Create global `receivedAfter()` and `receivedBefore()` helper functions
+
+**Refactor:**
+- Consistent date handling across matchers
+- Add documentation and examples
+
+---
+
+### Task 8.2: Implement Size Matchers ✅
+**Red:**
+- Write tests for `largerThan()` matcher:
+  - Match messages larger than byte size
+  - Handle various message sizes
+- Write tests for `smallerThan()` matcher:
+  - Match messages smaller than byte size
+  - Edge cases (zero size, null size)
+
+**Green:**
+- Create `src/Matcher/LargerThanMatcher.php`
+- Create `src/Matcher/SmallerThanMatcher.php`
+- Implement using `Message->size()` (bytes)
+- Create global `largerThan()` and `smallerThan()` helper functions
+
+**Refactor:**
+- Validate size parameters (non-negative)
+- Add documentation
+
+---
+
+### Task 8.3: Implement Attachment Matchers ✅
+**Red:**
+- Write tests for `hasAttachment()` matcher:
+  - Match messages with any attachment
+  - Match messages without attachments
+- Write tests for `attachmentType()` matcher:
+  - MIME type matching: "image/jpeg", "image/*"
+  - Extension matching: ".pdf", "*.doc"
+  - Multiple attachments (any match)
+
+**Green:**
+- Create `src/Matcher/HasAttachmentMatcher.php`
+- Create `src/Matcher/AttachmentTypeMatcher.php`
+- Implement using `Message->hasAttachments()` and `Message->attachments()`
+- Create global `hasAttachment()` and `attachmentType()` helper functions
+
+**Refactor:**
+- Pattern matching for MIME types and extensions
+- Handle null filename cases
+
+---
+
+### Task 8.4: Implement CC/BCC/Recipient Matchers ✅
+**Red:**
+- Write tests for `cc()` matcher:
+  - Match CC recipients with pattern
+  - Wildcard and regex support
+  - Multiple CC recipients (any match)
+- Write tests for `bcc()` matcher:
+  - Same as cc() for BCC field
+- Write tests for `recipient()` matcher:
+  - Match any recipient (To, CC, or BCC)
+  - Check all three fields
+
+**Green:**
+- Create `src/Matcher/CcMatcher.php`
+- Create `src/Matcher/BccMatcher.php`
+- Create `src/Matcher/RecipientMatcher.php`
+- Implement using `Message->cc()`, `Message->bcc()`
+- Create global `cc()`, `bcc()`, and `recipient()` helper functions
+
+**Refactor:**
+- Consistent pattern matching with `to()` and `from()`
+- Optimize recipient iteration
+
+---
+
+### Task 8.5: Implement Body Content Matcher ✅
+**Red:**
+- Write tests for `body()` matcher:
+  - Match plain text body content
+  - Match HTML body content
+  - Wildcard patterns: "*invoice*"
+  - Regex patterns: "/\d{6}/"
+  - Case-insensitive matching
+  - Null body handling
+
+**Green:**
+- Create `src/Matcher/BodyMatcher.php`
+- Implement using `Message->text()` and `Message->html()`
+- Check both text and HTML body
+- Create global `body()` helper function
+
+**Refactor:**
+- Consistent pattern matching behavior
+- Document wildcard requirement for substring matching
+
+---
+
 ## Future Enhancements
 
 The following features are documented in `SPECIFICATION.md` but not yet implemented:
-
-### Phase 8: Additional Matchers (Not Implemented)
-
-#### Task 8.1: Implement Date/Time Matchers
-- `receivedAfter(date)` - Match messages received after a specific date/time
-- `receivedBefore(date)` - Match messages received before a specific date/time
-- Support for relative dates: "1 hour ago", "yesterday", "last week"
-
-#### Task 8.2: Implement Size Matchers
-- `largerThan(bytes)` - Match messages larger than a specific size
-- `smallerThan(bytes)` - Match messages smaller than a specific size
-- Support for human-readable sizes: "1MB", "500KB"
-
-#### Task 8.3: Implement Attachment Matchers
-- `hasAttachment()` - Match messages with any attachment
-- `attachmentType(pattern)` - Match messages with specific attachment types
-- Support for MIME types and file extensions
-
-#### Task 8.4: Implement CC/BCC Matchers
-- `cc(pattern)` - Match messages where CC includes pattern
-- `bcc(pattern)` - Match messages where BCC includes pattern
-- Same pattern matching support as `from()` and `to()`
-
-#### Task 8.5: Implement Body Content Matcher
-- `body(pattern)` - Match messages based on body content
-- Support for plain text and HTML body searching
-- Same pattern matching support (exact, wildcard, regex)
 
 ### Phase 9: Advanced Actions (Not Implemented)
 
@@ -433,12 +520,17 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 
 ## Implementation Summary
 
-### Completed (Phases 1-7)
-- ✅ 20 tasks completed
-- ✅ 141 tests, 178 assertions (100% passing)
+### Completed (Phases 1-8)
+- ✅ 25 tasks completed (20 core + 5 additional matchers)
+- ✅ 225 tests, 267 assertions (100% passing)
 - ✅ Core DSL fully functional
 - ✅ Pattern matching (exact, wildcard, regex)
 - ✅ Basic matchers: any(), from(), to(), subject()
+- ✅ Date/time matchers: receivedAfter(), receivedBefore()
+- ✅ Size matchers: largerThan(), smallerThan()
+- ✅ Attachment matchers: hasAttachment(), attachmentType()
+- ✅ Recipient matchers: cc(), bcc(), recipient()
+- ✅ Body content matcher: body()
 - ✅ Logical combinators: allOf(), anyOf(), not()
 - ✅ Actions: MoveToFolder, MarkAsRead, Flag
 - ✅ Helper functions: chain(), env()
@@ -446,11 +538,6 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 - ✅ Backward compatibility maintained
 
 ### Not Implemented (Future Enhancements)
-- ❌ Date/time matchers: receivedAfter(), receivedBefore()
-- ❌ Size matchers: largerThan(), smallerThan()
-- ❌ Attachment matchers: hasAttachment(), attachmentType()
-- ❌ Additional recipient matchers: cc(), bcc()
-- ❌ Body content matcher: body()
 - ❌ Copy action: CopyToFolder()
 - ❌ Delete/trash actions: Delete(), MoveToTrash()
 - ❌ Mark as unread/unflag: MarkAsUnread(), Unflag()
