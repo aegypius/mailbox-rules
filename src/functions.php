@@ -10,10 +10,12 @@ use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\AnyOfMatcher;
 use MailboxRules\Matcher\FromMatcher;
+use MailboxRules\Matcher\LargerThanMatcher;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Matcher\NotMatcher;
 use MailboxRules\Matcher\ReceivedAfterMatcher;
 use MailboxRules\Matcher\ReceivedBeforeMatcher;
+use MailboxRules\Matcher\SmallerThanMatcher;
 use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Matcher\ToMatcher;
 use MailboxRules\Model\Rule;
@@ -229,4 +231,30 @@ function receivedAfter(CarbonInterface|string $datetime): Matcher
 function receivedBefore(CarbonInterface|string $datetime): Matcher
 {
     return new ReceivedBeforeMatcher($datetime);
+}
+
+/**
+ * Create a matcher that matches messages larger than a specific size.
+ *
+ * Supports bytes (int) or human-readable sizes ("1KB", "5MB", "2GB").
+ *
+ * @param int|string $size The minimum size (exclusive)
+ * @return Matcher A matcher for messages larger than the specified size.
+ */
+function largerThan(int|string $size): Matcher
+{
+    return new LargerThanMatcher($size);
+}
+
+/**
+ * Create a matcher that matches messages smaller than a specific size.
+ *
+ * Supports bytes (int) or human-readable sizes ("1KB", "5MB", "2GB").
+ *
+ * @param int|string $size The maximum size (exclusive)
+ * @return Matcher A matcher for messages smaller than the specified size.
+ */
+function smallerThan(int|string $size): Matcher
+{
+    return new SmallerThanMatcher($size);
 }
