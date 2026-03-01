@@ -33,4 +33,37 @@ final class CopyToFolderTest extends TestCase
         $action = new CopyToFolder('Important/Projects');
         $action($message);
     }
+
+    public function testEncodesAccentedCharactersToModifiedUtf7(): void
+    {
+        $message = $this->createMock(Message::class);
+        $message->expects(self::once())
+            ->method('copy')
+            ->with('Copropri&AOk-t&AOk-');
+
+        $action = new CopyToFolder('Copropriété');
+        $action($message);
+    }
+
+    public function testEncodesCyrillicCharactersToModifiedUtf7(): void
+    {
+        $message = $this->createMock(Message::class);
+        $message->expects(self::once())
+            ->method('copy')
+            ->with('&BBoEPgRABDcEOAQ9BDA-');
+
+        $action = new CopyToFolder('Корзина');
+        $action($message);
+    }
+
+    public function testEncodesAmpersandToModifiedUtf7(): void
+    {
+        $message = $this->createMock(Message::class);
+        $message->expects(self::once())
+            ->method('copy')
+            ->with('Inbox &- Archive');
+
+        $action = new CopyToFolder('Inbox & Archive');
+        $action($message);
+    }
 }

@@ -73,4 +73,40 @@ final class MoveToFolderTest extends TestCase
 
         // No exception thrown - action completes successfully
     }
+
+    public function testEncodesAccentedCharactersToModifiedUtf7(): void
+    {
+        $message = $this->createMock(Message::class);
+        $message->expects($this->once())
+            ->method('move')
+            ->with('Copropri&AOk-t&AOk-', false)
+            ->willReturn(12345);
+
+        $action = new MoveToFolder('Copropriété');
+        $action($message);
+    }
+
+    public function testEncodesCyrillicCharactersToModifiedUtf7(): void
+    {
+        $message = $this->createMock(Message::class);
+        $message->expects($this->once())
+            ->method('move')
+            ->with('&BBoEPgRABDcEOAQ9BDA-', false)
+            ->willReturn(67890);
+
+        $action = new MoveToFolder('Корзина');
+        $action($message);
+    }
+
+    public function testEncodesAmpersandToModifiedUtf7(): void
+    {
+        $message = $this->createMock(Message::class);
+        $message->expects($this->once())
+            ->method('move')
+            ->with('Inbox &- Archive', false)
+            ->willReturn(11111);
+
+        $action = new MoveToFolder('Inbox & Archive');
+        $action($message);
+    }
 }

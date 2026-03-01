@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MailboxRules\Action;
 
 use DirectoryTree\ImapEngine\Message;
+use DirectoryTree\ImapEngine\Support\Str;
 use MailboxRules\Action;
 
 /**
@@ -20,6 +21,6 @@ final readonly class MoveToFolder implements Action
 
     public function __invoke(Message $message): void
     {
-        $message->move($this->folder, $this->expunge);
+        $message->move(Str::toImapUtf7($this->folder), $this->expunge);
     }
 }

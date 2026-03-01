@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MailboxRules\Action;
 
 use DirectoryTree\ImapEngine\Message;
+use DirectoryTree\ImapEngine\Support\Str;
 use MailboxRules\Action;
 
 /**
@@ -24,6 +25,6 @@ final readonly class CopyToFolder implements Action
 
     public function __invoke(Message $message): void
     {
-        $message->copy($this->folder);
+        $message->copy(Str::toImapUtf7($this->folder));
     }
 }
