@@ -44,13 +44,35 @@ function mailbox(string|Dsn $dsn, iterable $rules): Rules
 /**
  * Create a rule.
  *
+ * Supports two signatures:
+ * 1. Legacy: rule(name, callback) - backward compatibility
+ * 2. Matcher-based: rule(name, when: matcher, then: callable)
+ *
  * @param string $name The name of the rule.
- * @param \Closure(Message): iterable<Action> $callback The callback that returns an iterable of Actions.
+ * @param \Closure(Message): iterable<Action>|null $callback The callback (legacy signature).
+ * @param Matcher|null $when The matcher to evaluate (new signature).
+ * @param \Closure(Message): iterable<Action>|null $then The action callback (new signature).
  * @return Rule The created Rule object.
  */
-function rule(string $name, \Closure $callback): Rule
-{
-    return new Rule($name, $callback);
+function rule(
+    string $name,
+    ?\Closure $callback = null,
+    ?Matcher $when = null,
+    ?\Closure $then = null
+): Rule {
+    // New signature: rule(name, when: matcher, then: callable)
+    if ($when !== null && $then !== null) {
+        return new Rule($name, $when, $then);
+    }
+
+    // Legacy signature: rule(name, callback)
+    if ($callback !== null) {
+        return new Rule($name, null, $callback);
+    }
+
+    throw new \InvalidArgumentException(
+        'rule() requires either callback parameter or both when and then parameters'
+    );
 }
 
 /**
