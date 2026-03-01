@@ -9,7 +9,9 @@ use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\AnyOfMatcher;
+use MailboxRules\Matcher\AttachmentTypeMatcher;
 use MailboxRules\Matcher\FromMatcher;
+use MailboxRules\Matcher\HasAttachmentMatcher;
 use MailboxRules\Matcher\LargerThanMatcher;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Matcher\NotMatcher;
@@ -257,4 +259,32 @@ function largerThan(int|string $size): Matcher
 function smallerThan(int|string $size): Matcher
 {
     return new SmallerThanMatcher($size);
+}
+
+/**
+ * Match messages with attachments.
+ *
+ * @return Matcher A matcher for messages that have at least one attachment.
+ */
+function hasAttachment(): Matcher
+{
+    return new HasAttachmentMatcher();
+}
+
+/**
+ * Match messages by attachment type (MIME type or extension).
+ *
+ * Supports:
+ * - Exact MIME types: "image/jpeg", "application/pdf"
+ * - MIME type wildcards: "image/*", "application/*"
+ * - File extensions: ".pdf", "pdf", "*.pdf"
+ *
+ * Returns true if ANY attachment matches the pattern.
+ *
+ * @param string $pattern The pattern to match against attachment MIME type or extension.
+ * @return Matcher A matcher for messages with matching attachments.
+ */
+function attachmentType(string $pattern): Matcher
+{
+    return new AttachmentTypeMatcher($pattern);
 }
