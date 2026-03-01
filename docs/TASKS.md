@@ -54,9 +54,9 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-## Phase 2: Enhanced Rule Function
+## Phase 2: Enhanced Rule Function ✅
 
-### Task 2.1: Update `rule()` Function Signature
+### Task 2.1: Update `rule()` Function Signature ✅
 **Red:**
 - Write tests for new `rule()` signatures:
   - `rule(name, when: matcher, then: callable)`
@@ -74,7 +74,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 2.2: Update `Rule` Model
+### Task 2.2: Update `Rule` Model ✅
 **Red:**
 - Write tests for `Rule` executing with matcher:
   - Rule matches and executes actions
@@ -92,9 +92,9 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-## Phase 3: Basic Matchers
+## Phase 3: Basic Matchers ✅
 
-### Task 3.1: Implement `from()` Matcher
+### Task 3.1: Implement `from()` Matcher ✅
 **Red:**
 - Write tests for `from()` matcher:
   - Exact email match
@@ -114,7 +114,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 3.2: Implement `to()` Matcher
+### Task 3.2: Implement `to()` Matcher ✅
 **Red:**
 - Write tests for `to()` matcher:
   - Single recipient match
@@ -132,7 +132,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 3.3: Implement `subject()` Matcher
+### Task 3.3: Implement `subject()` Matcher ✅
 **Red:**
 - Write tests for `subject()` matcher:
   - Exact match
@@ -150,9 +150,9 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-## Phase 4: Logical Combinators
+## Phase 4: Logical Combinators ✅
 
-### Task 4.1: Implement `allOf()` Combinator (AND)
+### Task 4.1: Implement `allOf()` Combinator (AND) ✅
 **Red:**
 - Write tests for `allOf()`:
   - Empty matchers (should match all?)
@@ -171,7 +171,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 4.2: Implement `anyOf()` Combinator (OR)
+### Task 4.2: Implement `anyOf()` Combinator (OR) ✅
 **Red:**
 - Write tests for `anyOf()`:
   - Empty matchers (should match none?)
@@ -189,7 +189,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 4.3: Implement `not()` Combinator (NOT)
+### Task 4.3: Implement `not()` Combinator (NOT) ✅
 **Red:**
 - Write tests for `not()`:
   - Negating a matching matcher
@@ -206,9 +206,9 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-## Phase 5: New Actions
+## Phase 5: New Actions ✅
 
-### Task 5.1: Implement `MoveToFolder` Action
+### Task 5.1: Implement `MoveToFolder` Action ✅
 **Red:**
 - Write tests for `MoveToFolder`:
   - Move message to specified folder
@@ -226,7 +226,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 5.2: Implement `MarkAsRead` Action
+### Task 5.2: Implement `MarkAsRead` Action ✅
 **Red:**
 - Write tests for `MarkAsRead`:
   - Mark message as read
@@ -241,7 +241,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 5.3: Implement `Flag` Action
+### Task 5.3: Implement `Flag` Action ✅
 **Red:**
 - Write tests for `Flag`:
   - Set custom flag on message
@@ -256,9 +256,9 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-## Phase 6: Helper Function
+## Phase 6: Helper Functions ✅
 
-### Task 6.1: Implement `chain()` Helper
+### Task 6.1: Implement `chain()` Helper ✅
 **Red:**
 - Write tests for `chain()`:
   - Returns iterable of actions
@@ -275,9 +275,27 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-## Phase 7: Integration & Documentation
+### Task 6.2: Implement `env()` Helper ✅
+**Red:**
+- Write tests for `env()`:
+  - Returns value when variable exists
+  - Throws exception when undefined
+  - Throws exception when empty
+  - Preserves whitespace
 
-### Task 7.1: Integration Tests
+**Green:**
+- Create `env()` function in `src/functions.php`
+- Implement: validate and return environment variable
+
+**Refactor:**
+- Add descriptive error messages
+- Add documentation
+
+---
+
+## Phase 7: Integration & Documentation ✅
+
+### Task 7.1: Integration Tests ✅
 **Red:**
 - Write end-to-end tests:
   - Complete rule configuration
@@ -295,7 +313,7 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 7.2: Update `rules.php` Example
+### Task 7.2: Update `rules.php` Example ✅
 **Red:**
 - Create test that loads and validates `rules.php`
 
@@ -315,12 +333,76 @@ This document breaks down the Email Rule Matching Specification into small, test
 
 ---
 
-### Task 7.3: Update Documentation
+### Task 7.3: Update Documentation ✅
 - Update README with new syntax
 - Add migration guide for existing rules
 - Document all available matchers
 - Document pattern matching syntax
 - Add troubleshooting section
+
+---
+
+## Future Enhancements
+
+The following features are documented in `SPECIFICATION.md` but not yet implemented:
+
+### Phase 8: Additional Matchers (Not Implemented)
+
+#### Task 8.1: Implement Date/Time Matchers
+- `receivedAfter(date)` - Match messages received after a specific date/time
+- `receivedBefore(date)` - Match messages received before a specific date/time
+- Support for relative dates: "1 hour ago", "yesterday", "last week"
+
+#### Task 8.2: Implement Size Matchers
+- `largerThan(bytes)` - Match messages larger than a specific size
+- `smallerThan(bytes)` - Match messages smaller than a specific size
+- Support for human-readable sizes: "1MB", "500KB"
+
+#### Task 8.3: Implement Attachment Matchers
+- `hasAttachment()` - Match messages with any attachment
+- `attachmentType(pattern)` - Match messages with specific attachment types
+- Support for MIME types and file extensions
+
+#### Task 8.4: Implement CC/BCC Matchers
+- `cc(pattern)` - Match messages where CC includes pattern
+- `bcc(pattern)` - Match messages where BCC includes pattern
+- Same pattern matching support as `from()` and `to()`
+
+#### Task 8.5: Implement Body Content Matcher
+- `body(pattern)` - Match messages based on body content
+- Support for plain text and HTML body searching
+- Same pattern matching support (exact, wildcard, regex)
+
+### Phase 9: Advanced Actions (Not Implemented)
+
+#### Task 9.1: Implement Copy Action
+- `CopyToFolder(folder)` - Copy message to folder (vs. move)
+- Keep original message in place
+
+#### Task 9.2: Implement Delete/Trash Actions
+- `Delete()` - Permanently delete message
+- `MoveToTrash()` - Move to trash folder
+- Add safety confirmation for permanent deletes
+
+#### Task 9.3: Implement Unflag/Unread Actions
+- `MarkAsUnread()` - Remove read flag
+- `Unflag()` - Remove flag from message
+
+### Phase 10: Advanced Features (Not Implemented)
+
+#### Task 10.1: Implement Dry-Run Mode
+- `preview()` - Test rules without applying actions
+- Show what would happen for each message
+- Useful for debugging rule configurations
+
+#### Task 10.2: Implement Rule Priorities
+- Add priority/ordering to rules
+- Allow short-circuit on first match
+- Stop processing after specific rule matches
+
+#### Task 10.3: Implement Rule Conditions
+- Add pre-conditions to rules (e.g., only run on weekdays)
+- Add post-conditions (e.g., verify action succeeded)
 
 ---
 
@@ -346,6 +428,35 @@ This document breaks down the Email Rule Matching Specification into small, test
 - Non-existent folders in actions
 - Special characters in patterns
 - Case sensitivity
+
+---
+
+## Implementation Summary
+
+### Completed (Phases 1-7)
+- ✅ 20 tasks completed
+- ✅ 141 tests, 178 assertions (100% passing)
+- ✅ Core DSL fully functional
+- ✅ Pattern matching (exact, wildcard, regex)
+- ✅ Basic matchers: any(), from(), to(), subject()
+- ✅ Logical combinators: allOf(), anyOf(), not()
+- ✅ Actions: MoveToFolder, MarkAsRead, Flag
+- ✅ Helper functions: chain(), env()
+- ✅ Integration tests and documentation
+- ✅ Backward compatibility maintained
+
+### Not Implemented (Future Enhancements)
+- ❌ Date/time matchers: receivedAfter(), receivedBefore()
+- ❌ Size matchers: largerThan(), smallerThan()
+- ❌ Attachment matchers: hasAttachment(), attachmentType()
+- ❌ Additional recipient matchers: cc(), bcc()
+- ❌ Body content matcher: body()
+- ❌ Copy action: CopyToFolder()
+- ❌ Delete/trash actions: Delete(), MoveToTrash()
+- ❌ Mark as unread/unflag: MarkAsUnread(), Unflag()
+- ❌ Dry-run/preview mode
+- ❌ Rule priorities and short-circuiting
+- ❌ Rule pre/post conditions
 
 ---
 
