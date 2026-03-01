@@ -183,3 +183,21 @@ function chain(Action ...$actions): \Generator
         yield $action;
     }
 }
+
+/**
+ * Get an environment variable value or throw an exception if not defined.
+ *
+ * @param string $name The environment variable name
+ * @return string The environment variable value
+ * @throws \RuntimeException If the environment variable is not defined or empty
+ */
+function env(string $name): string
+{
+    $value = \getenv($name);
+
+    if ($value === false || $value === '') {
+        throw new \RuntimeException(sprintf('"%s" environment variable must be defined', $name));
+    }
+
+    return $value;
+}
