@@ -42,6 +42,7 @@ class ApplyCommandTest extends TestCase
         $mailbox->expects($this->once())->method('inbox')->willReturn($folder);
         $folder->expects($this->once())->method('messages')->willReturn($query);
         $query->expects($this->once())->method('withHeaders')->willReturn($query);
+        $query->expects($this->once())->method('limit')->with(10)->willReturn($query);
         $query->expects($this->once())->method('get')->willReturn(new MessageCollection($messages));
 
         $hash = spl_object_hash($mailbox);
