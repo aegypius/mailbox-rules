@@ -10,6 +10,8 @@ use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\AnyOfMatcher;
 use MailboxRules\Matcher\AttachmentTypeMatcher;
+use MailboxRules\Matcher\BccMatcher;
+use MailboxRules\Matcher\CcMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\HasAttachmentMatcher;
 use MailboxRules\Matcher\LargerThanMatcher;
@@ -17,6 +19,7 @@ use MailboxRules\Matcher\Matcher;
 use MailboxRules\Matcher\NotMatcher;
 use MailboxRules\Matcher\ReceivedAfterMatcher;
 use MailboxRules\Matcher\ReceivedBeforeMatcher;
+use MailboxRules\Matcher\RecipientMatcher;
 use MailboxRules\Matcher\SmallerThanMatcher;
 use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Matcher\ToMatcher;
@@ -287,4 +290,49 @@ function hasAttachment(): Matcher
 function attachmentType(string $pattern): Matcher
 {
     return new AttachmentTypeMatcher($pattern);
+}
+
+/**
+ * Match messages by CC recipient email address.
+ *
+ * Supports exact matches, wildcards (*@example.com), and regex patterns.
+ * Matches if ANY CC recipient matches the pattern (case-insensitive).
+ *
+ * @param string $pattern The pattern to match against CC recipient emails.
+ * @return Matcher A matcher for CC recipients.
+ */
+function cc(string $pattern): Matcher
+{
+    return new CcMatcher($pattern);
+}
+
+/**
+ * Match messages by BCC recipient email address.
+ *
+ * Supports exact matches, wildcards (*@example.com), and regex patterns.
+ * Matches if ANY BCC recipient matches the pattern (case-insensitive).
+ *
+ * @param string $pattern The pattern to match against BCC recipient emails.
+ * @return Matcher A matcher for BCC recipients.
+ */
+function bcc(string $pattern): Matcher
+{
+    return new BccMatcher($pattern);
+}
+
+/**
+ * Match messages by any recipient (To, CC, or BCC).
+ *
+ * Convenience matcher that checks if the pattern matches any recipient
+ * in the To, CC, or BCC fields.
+ *
+ * Supports exact matches, wildcards (*@example.com), and regex patterns.
+ * Matches if ANY recipient in any field matches the pattern (case-insensitive).
+ *
+ * @param string $pattern The pattern to match against recipient emails.
+ * @return Matcher A matcher for any recipient field.
+ */
+function recipient(string $pattern): Matcher
+{
+    return new RecipientMatcher($pattern);
 }
