@@ -6,6 +6,7 @@ namespace MailboxRules;
 
 use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Matcher\AnyMatcher;
+use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
@@ -83,4 +84,17 @@ function rule(
 function any(): Matcher
 {
     return new AnyMatcher();
+}
+
+/**
+ * Create a matcher that matches messages from a specific sender.
+ *
+ * Supports exact matches, wildcards, and regex patterns (case-insensitive).
+ *
+ * @param string $pattern Email pattern to match (exact, wildcard, or regex)
+ * @return Matcher A matcher for the sender's email address.
+ */
+function from(string $pattern): Matcher
+{
+    return new FromMatcher($pattern);
 }
