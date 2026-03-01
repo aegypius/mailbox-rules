@@ -23,10 +23,21 @@ final readonly class Rule implements \Stringable
     }
 
     /**
+     * Executes the rule against a message.
+     *
+     * If a matcher is present, evaluates it first. Only executes the callback
+     * if the matcher matches (or if no matcher is present for legacy rules).
+     *
      * @return iterable<Action>
      */
     public function __invoke(Message $message): iterable
     {
+        // If matcher exists and doesn't match, return empty
+        if ($this->matcher !== null && !$this->matcher->matches($message)) {
+            return [];
+        }
+
+        // Otherwise execute callback (legacy or matched)
         return ($this->callback)($message);
     }
 
