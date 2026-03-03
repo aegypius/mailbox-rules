@@ -41,9 +41,6 @@ final class GeneratorReuseTest extends TestCase
         $mockMessage1 = $this->createStub(Message::class);
         $mockMessage2 = $this->createStub(Message::class);
 
-        // Rules should be created normally
-        new \MailboxRules\Model\Rules($mockMailbox, $rules);
-
         // First rule invocation should work
         $rule = $rules[0];
         $result1 = $rule($mockMessage1);

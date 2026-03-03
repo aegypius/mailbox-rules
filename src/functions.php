@@ -13,6 +13,7 @@ use MailboxRules\Matcher\AttachmentTypeMatcher;
 use MailboxRules\Matcher\BccMatcher;
 use MailboxRules\Matcher\BodyMatcher;
 use MailboxRules\Matcher\CcMatcher;
+use MailboxRules\Matcher\FolderMatcher;
 use MailboxRules\Matcher\FromMatcher;
 use MailboxRules\Matcher\HasAttachmentMatcher;
 use MailboxRules\Matcher\LargerThanMatcher;
@@ -75,11 +76,15 @@ function rule(
     ?Matcher $when = null,
     \Closure|iterable|null $then = null
 ): Rule {
+    if ($then === null) {
+        throw new \InvalidArgumentException('Parameter $then is required');
+    }
+
     // If $then is already iterable (Generator, array), materialize it to array
     // so it can be reused across multiple messages (generators are not rewindable)
     if (!$then instanceof \Closure) {
         $actions = is_array($then) ? $then : iterator_to_array($then, false);
-        $then = static fn (): array => $actions;
+        $wrappedThen = static fn (): array => $actions;
     } else {
         // Wrap closure to detect reused generators
         /** @var \WeakMap<\Generator, list<Action>> $seenGenerators */
@@ -89,7 +94,7 @@ function rule(
          * @param Message $message
          * @return iterable<Action>
          */
-        $then = static function (Message $message) use ($seenGenerators, $originalThen): iterable {
+        $wrappedThen = static function (Message $message) use ($seenGenerators, $originalThen): iterable {
             $actions = $originalThen($message);
 
             // If it's a Generator, check if we've seen it before
@@ -111,7 +116,7 @@ function rule(
         };
     }
 
-    return new Rule($name, $when, $then);
+    return new Rule($name, $when, $wrappedThen);
 }
 
 /**
@@ -377,4 +382,24 @@ function recipient(string $pattern): Matcher
 function body(string $pattern): Matcher
 {
     return new BodyMatcher($pattern);
+}
+
+/**
+ * Match messages by folder/directory path.
+ *
+ * Matches the IMAP folder path where the message is located.
+ * Supports exact matches, wildcards, and regex patterns (case-insensitive).
+ *
+ * Examples:
+ * - folder('INBOX') - matches messages in INBOX
+ * - folder('Archives/*') - matches any folder under Archives
+ * - folder('*\/2024') - matches any folder ending with 2024
+ * - folder('/^Projects\/Client[A-Z]+$/i') - regex pattern
+ *
+ * @param string $pattern The pattern to match against folder path.
+ * @return Matcher A matcher for folder paths.
+ */
+function folder(string $pattern): Matcher
+{
+    return new FolderMatcher($pattern);
 }
