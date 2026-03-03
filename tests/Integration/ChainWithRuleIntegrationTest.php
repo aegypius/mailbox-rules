@@ -36,7 +36,8 @@ final class ChainWithRuleIntegrationTest extends TestCase
         // This is the pattern from rules.php that was failing
         $rule = rule(
             name: 'Le Taillis',
-            when: new AnyMatcher(), // Match all messages for this test
+            when: new AnyMatcher(),
+            // Match all messages for this test
             then: chain(
                 new LogAction(),
                 new MarkAsRead(),

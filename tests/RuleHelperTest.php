@@ -20,26 +20,26 @@ final class RuleHelperTest extends TestCase
 {
     public function testRuleAcceptsChainDirectly(): void
     {
-        $matcher = new AnyMatcher();
+        $anyMatcher = new AnyMatcher();
         $actions = chain(
             new LogAction(),
             new MarkAsRead(),
             new MoveToFolder('Archive')
         );
 
-        $rule = rule('Test Rule', when: $matcher, then: $actions);
+        $rule = rule('Test Rule', when: $anyMatcher, then: $actions);
 
         self::assertSame('Test Rule', $rule->name);
-        self::assertSame($matcher, $rule->matcher);
+        self::assertSame($anyMatcher, $rule->matcher);
     }
 
     public function testRuleWithChainExecutesActions(): void
     {
-        $matcher = new AnyMatcher();
+        $anyMatcher = new AnyMatcher();
 
         $rule = rule(
             'Test Rule',
-            when: $matcher,
+            when: $anyMatcher,
             then: chain(
                 new LogAction(),
                 new MarkAsRead(),
@@ -58,11 +58,11 @@ final class RuleHelperTest extends TestCase
 
     public function testRuleWithClosureStillWorks(): void
     {
-        $matcher = new AnyMatcher();
+        $anyMatcher = new AnyMatcher();
 
         $rule = rule(
             'Test Rule',
-            when: $matcher,
+            when: $anyMatcher,
             then: static fn () => yield from [
                 new LogAction(),
                 new MarkAsRead(),

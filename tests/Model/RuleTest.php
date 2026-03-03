@@ -20,11 +20,11 @@ final class RuleTest extends TestCase
     public function it_executes_actions_when_matcher_matches(): void
     {
         // Arrange: matcher that always matches
-        $matcher = new AnyMatcher();
+        $anyMatcher = new AnyMatcher();
         $action1 = $this->createStub(Action::class);
         $action2 = $this->createStub(Action::class);
-        $callback = fn (Message $message) => [$action1, $action2];
-        $rule = new Rule('test-rule', $matcher, $callback);
+        $callback = fn (Message $message): array => [$action1, $action2];
+        $rule = new Rule('test-rule', $anyMatcher, $callback);
         $message = $this->createStub(Message::class);
 
         // Act
@@ -46,7 +46,7 @@ final class RuleTest extends TestCase
         };
         $action1 = $this->createStub(Action::class);
         $action2 = $this->createStub(Action::class);
-        $callback = fn (Message $message) => [$action1, $action2];
+        $callback = fn (Message $message): array => [$action1, $action2];
         $rule = new Rule('test-rule', $matcher, $callback);
         $message = $this->createStub(Message::class);
 
@@ -63,7 +63,7 @@ final class RuleTest extends TestCase
         // Arrange: null matcher (legacy behavior)
         $action1 = $this->createStub(Action::class);
         $action2 = $this->createStub(Action::class);
-        $callback = fn (Message $message) => [$action1, $action2];
+        $callback = fn (Message $message): array => [$action1, $action2];
         $rule = new Rule('legacy-rule', null, $callback);
         $message = $this->createStub(Message::class);
 
@@ -86,7 +86,7 @@ final class RuleTest extends TestCase
         };
         $callbackExecuted = false;
         $action = $this->createStub(Action::class);
-        $callback = function (Message $message) use (&$callbackExecuted, $action) {
+        $callback = function (Message $message) use (&$callbackExecuted, $action): array {
             $callbackExecuted = true;
             return [$action];
         };

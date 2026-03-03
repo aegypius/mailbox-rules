@@ -19,8 +19,8 @@ final class CopyToFolderTest extends TestCase
             ->method('copy')
             ->with('Archive');
 
-        $action = new CopyToFolder('Archive');
-        $action($message);
+        $copyToFolder = new CopyToFolder('Archive');
+        $copyToFolder($message);
     }
 
     public function testCopiesWithDifferentFolderName(): void
@@ -30,8 +30,8 @@ final class CopyToFolderTest extends TestCase
             ->method('copy')
             ->with('Important/Projects');
 
-        $action = new CopyToFolder('Important/Projects');
-        $action($message);
+        $copyToFolder = new CopyToFolder('Important/Projects');
+        $copyToFolder($message);
     }
 
     public function testEncodesAccentedCharactersToModifiedUtf7(): void
@@ -41,8 +41,8 @@ final class CopyToFolderTest extends TestCase
             ->method('copy')
             ->with('Copropri&AOk-t&AOk-');
 
-        $action = new CopyToFolder('Copropriété');
-        $action($message);
+        $copyToFolder = new CopyToFolder('Copropriété');
+        $copyToFolder($message);
     }
 
     public function testEncodesCyrillicCharactersToModifiedUtf7(): void
@@ -52,8 +52,8 @@ final class CopyToFolderTest extends TestCase
             ->method('copy')
             ->with('&BBoEPgRABDcEOAQ9BDA-');
 
-        $action = new CopyToFolder('Корзина');
-        $action($message);
+        $copyToFolder = new CopyToFolder('Корзина');
+        $copyToFolder($message);
     }
 
     public function testEncodesAmpersandToModifiedUtf7(): void
@@ -63,7 +63,7 @@ final class CopyToFolderTest extends TestCase
             ->method('copy')
             ->with('Inbox &- Archive');
 
-        $action = new CopyToFolder('Inbox & Archive');
-        $action($message);
+        $copyToFolder = new CopyToFolder('Inbox & Archive');
+        $copyToFolder($message);
     }
 }

@@ -15,9 +15,9 @@ final class HasAttachmentMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('hasAttachments')->willReturn(true);
 
-        $matcher = new HasAttachmentMatcher();
+        $hasAttachmentMatcher = new HasAttachmentMatcher();
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($hasAttachmentMatcher->matches($message));
     }
 
     public function testDoesNotMatchMessageWithoutAttachments(): void
@@ -25,8 +25,8 @@ final class HasAttachmentMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('hasAttachments')->willReturn(false);
 
-        $matcher = new HasAttachmentMatcher();
+        $hasAttachmentMatcher = new HasAttachmentMatcher();
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($hasAttachmentMatcher->matches($message));
     }
 }

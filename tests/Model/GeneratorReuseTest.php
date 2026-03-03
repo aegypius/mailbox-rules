@@ -42,7 +42,7 @@ final class GeneratorReuseTest extends TestCase
         $mockMessage2 = $this->createStub(Message::class);
 
         // Rules should be created normally
-        $ruleSystem = new \MailboxRules\Model\Rules($mockMailbox, $rules);
+        new \MailboxRules\Model\Rules($mockMailbox, $rules);
 
         // First rule invocation should work
         $rule = $rules[0];
@@ -67,11 +67,11 @@ final class GeneratorReuseTest extends TestCase
             rule(
                 name: "Test Rule",
                 when: any(),
-                then: static fn () => chain(new LogAction())  // Fresh generator each time
+                then: static fn (): \Generator => chain(new LogAction())  // Fresh generator each time
             ),
         ];
 
-        $mockMailbox = $this->createStub(Mailbox::class);
+        $this->createStub(Mailbox::class);
         $mockMessage1 = $this->createStub(Message::class);
         $mockMessage2 = $this->createStub(Message::class);
 
@@ -97,7 +97,7 @@ final class GeneratorReuseTest extends TestCase
             rule(
                 name: "Test Rule",
                 when: any(),
-                then: fn () => $premadeGenerator  // Closure captures generator, returns same instance
+                then: fn (): \Generator => $premadeGenerator  // Closure captures generator, returns same instance
             ),
         ];
 

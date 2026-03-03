@@ -35,7 +35,7 @@ final readonly class Dsn implements \Stringable
             urldecode($parts['user']),
             $parts['pass'],
             $parts['host'],
-            (int) $parts['port'],
+            $parts['port'],
             ltrim($parts['path'] ?? '', '/'),
         );
     }

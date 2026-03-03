@@ -25,16 +25,10 @@ final readonly class BccMatcher implements Matcher
     {
         $recipients = $message->bcc();
 
-        if (empty($recipients)) {
+        if ($recipients === []) {
             return false;
         }
 
-        foreach ($recipients as $recipient) {
-            if ($this->patternMatcher->matches($recipient->email())) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($recipients, fn ($recipient): bool => $this->patternMatcher->matches($recipient->email()));
     }
 }

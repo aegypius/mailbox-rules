@@ -18,7 +18,7 @@ class MarkAsUnreadTest extends TestCase
         $message->expects($this->once())
             ->method('markUnread');
 
-        $action = new MarkAsUnread();
-        $action($message);
+        $markAsUnread = new MarkAsUnread();
+        $markAsUnread($message);
     }
 }

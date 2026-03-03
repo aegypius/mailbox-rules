@@ -17,7 +17,7 @@ assert($mailbox instanceof Mailbox);
 $rule = new Rule(
     name: 'Test Rule',
     matcher: null,
-    callback: static fn () => yield new MoveToFolder('Archive')
+    then: static fn () => yield new MoveToFolder('Archive')
 );
 
 return new Rules($mailbox, [$rule]);

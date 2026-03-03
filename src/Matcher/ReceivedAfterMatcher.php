@@ -29,7 +29,7 @@ final readonly class ReceivedAfterMatcher implements Matcher
     {
         $messageDate = $message->date();
 
-        if ($messageDate === null) {
+        if (!$messageDate instanceof \Carbon\CarbonInterface) {
             return false;
         }
 

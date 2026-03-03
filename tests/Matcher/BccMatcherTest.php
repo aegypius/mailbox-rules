@@ -21,51 +21,51 @@ final class BccMatcherTest extends TestCase
 
     public function testMatchesExactBccAddress(): void
     {
-        $bcc = $this->createAddress('bcc@example.com');
+        $address = $this->createAddress('bcc@example.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('bcc')->willReturn([$bcc]);
+        $message->method('bcc')->willReturn([$address]);
 
-        $matcher = new BccMatcher('bcc@example.com');
+        $bccMatcher = new BccMatcher('bcc@example.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($bccMatcher->matches($message));
     }
 
     public function testMatchesWithWildcard(): void
     {
-        $bcc = $this->createAddress('user@example.com');
+        $address = $this->createAddress('user@example.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('bcc')->willReturn([$bcc]);
+        $message->method('bcc')->willReturn([$address]);
 
-        $matcher = new BccMatcher('*@example.com');
+        $bccMatcher = new BccMatcher('*@example.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($bccMatcher->matches($message));
     }
 
     public function testMatchesAnyBccRecipient(): void
     {
-        $bcc1 = $this->createAddress('first@example.com');
+        $address = $this->createAddress('first@example.com');
         $bcc2 = $this->createAddress('second@other.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('bcc')->willReturn([$bcc1, $bcc2]);
+        $message->method('bcc')->willReturn([$address, $bcc2]);
 
-        $matcher = new BccMatcher('*@other.com');
+        $bccMatcher = new BccMatcher('*@other.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($bccMatcher->matches($message));
     }
 
     public function testDoesNotMatchDifferentDomain(): void
     {
-        $bcc = $this->createAddress('user@example.com');
+        $address = $this->createAddress('user@example.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('bcc')->willReturn([$bcc]);
+        $message->method('bcc')->willReturn([$address]);
 
-        $matcher = new BccMatcher('*@other.com');
+        $bccMatcher = new BccMatcher('*@other.com');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($bccMatcher->matches($message));
     }
 
     public function testReturnsFalseForNoBccRecipients(): void
@@ -73,8 +73,8 @@ final class BccMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('bcc')->willReturn([]);
 
-        $matcher = new BccMatcher('user@example.com');
+        $bccMatcher = new BccMatcher('user@example.com');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($bccMatcher->matches($message));
     }
 }

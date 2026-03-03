@@ -46,7 +46,7 @@ class ApplyCommandTest extends TestCase
         $query->expects($this->once())->method('get')->willReturn(new MessageCollection($messages));
 
         $hash = spl_object_hash($mailbox);
-        $GLOBALS["mailbox_{$hash}"] = $mailbox;
+        $GLOBALS['mailbox_' . $hash] = $mailbox;
 
         $tempFile = tempnam(sys_get_temp_dir(), 'rules_') . '.php';
         file_put_contents(
@@ -75,16 +75,16 @@ PHP
     {
         $this->tempFile = $this->createTempRulesFile([]);
 
-        $command = new ApplyCommand();
-        $tester = new CommandTester($command);
+        $applyCommand = new ApplyCommand();
+        $commandTester = new CommandTester($applyCommand);
 
-        $tester->execute([
+        $commandTester->execute([
             'config' => $this->tempFile,
             '--dry-run' => true,
         ]);
 
-        $this->assertStringContainsString('No actions to execute', $tester->getDisplay());
-        $this->assertSame(0, $tester->getStatusCode());
+        $this->assertStringContainsString('No actions to execute', $commandTester->getDisplay());
+        $this->assertSame(0, $commandTester->getStatusCode());
     }
 
     public function testDryRunDisplaysPreviewResults(): void
@@ -94,20 +94,20 @@ PHP
 
         $this->tempFile = $this->createTempRulesFile([$message]);
 
-        $command = new ApplyCommand();
-        $tester = new CommandTester($command);
+        $applyCommand = new ApplyCommand();
+        $commandTester = new CommandTester($applyCommand);
 
-        $tester->execute([
+        $commandTester->execute([
             'config' => $this->tempFile,
             '--dry-run' => true,
         ]);
 
-        $output = $tester->getDisplay();
+        $output = $commandTester->getDisplay();
         $this->assertStringContainsString('Rule: Test Rule', $output);
         $this->assertStringContainsString('Message: Test Subject', $output);
         $this->assertStringContainsString('Actions:', $output);
-        $this->assertStringContainsString('MailboxRules\Action\MoveToFolder', $output);
-        $this->assertSame(0, $tester->getStatusCode());
+        $this->assertStringContainsString(\MailboxRules\Action\MoveToFolder::class, $output);
+        $this->assertSame(0, $commandTester->getStatusCode());
     }
 
     public function testDryRunHandlesNoSubject(): void
@@ -117,16 +117,16 @@ PHP
 
         $this->tempFile = $this->createTempRulesFile([$message]);
 
-        $command = new ApplyCommand();
-        $tester = new CommandTester($command);
+        $applyCommand = new ApplyCommand();
+        $commandTester = new CommandTester($applyCommand);
 
-        $tester->execute([
+        $commandTester->execute([
             'config' => $this->tempFile,
             '--dry-run' => true,
         ]);
 
-        $output = $tester->getDisplay();
+        $output = $commandTester->getDisplay();
         $this->assertStringContainsString('Message: (no subject)', $output);
-        $this->assertSame(0, $tester->getStatusCode());
+        $this->assertSame(0, $commandTester->getStatusCode());
     }
 }

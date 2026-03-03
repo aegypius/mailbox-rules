@@ -30,9 +30,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment]);
 
-        $matcher = new AttachmentTypeMatcher('image/jpeg');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('image/jpeg');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($attachmentTypeMatcher->matches($message));
     }
 
     public function testMatchesByMimeTypeWildcard(): void
@@ -42,9 +42,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment]);
 
-        $matcher = new AttachmentTypeMatcher('image/*');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('image/*');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($attachmentTypeMatcher->matches($message));
     }
 
     public function testMatchesByExtensionWithDot(): void
@@ -54,9 +54,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment]);
 
-        $matcher = new AttachmentTypeMatcher('.pdf');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('.pdf');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($attachmentTypeMatcher->matches($message));
     }
 
     public function testMatchesByExtensionWithoutDot(): void
@@ -66,9 +66,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment]);
 
-        $matcher = new AttachmentTypeMatcher('pdf');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('pdf');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($attachmentTypeMatcher->matches($message));
     }
 
     public function testMatchesByExtensionWildcard(): void
@@ -78,9 +78,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment]);
 
-        $matcher = new AttachmentTypeMatcher('*.pdf');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('*.pdf');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($attachmentTypeMatcher->matches($message));
     }
 
     public function testMatchesAnyAttachmentInMultiple(): void
@@ -91,9 +91,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment1, $attachment2]);
 
-        $matcher = new AttachmentTypeMatcher('image/*');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('image/*');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($attachmentTypeMatcher->matches($message));
     }
 
     public function testDoesNotMatchDifferentMimeType(): void
@@ -103,9 +103,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment]);
 
-        $matcher = new AttachmentTypeMatcher('application/pdf');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('application/pdf');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($attachmentTypeMatcher->matches($message));
     }
 
     public function testDoesNotMatchDifferentExtension(): void
@@ -115,9 +115,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment]);
 
-        $matcher = new AttachmentTypeMatcher('.pdf');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('.pdf');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($attachmentTypeMatcher->matches($message));
     }
 
     public function testReturnsFalseForNoAttachments(): void
@@ -125,9 +125,9 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([]);
 
-        $matcher = new AttachmentTypeMatcher('image/*');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('image/*');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($attachmentTypeMatcher->matches($message));
     }
 
     public function testDoesNotMatchWhenFilenameIsNull(): void
@@ -137,8 +137,8 @@ final class AttachmentTypeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('attachments')->willReturn([$attachment]);
 
-        $matcher = new AttachmentTypeMatcher('.pdf');
+        $attachmentTypeMatcher = new AttachmentTypeMatcher('.pdf');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($attachmentTypeMatcher->matches($message));
     }
 }

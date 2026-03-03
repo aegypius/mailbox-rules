@@ -53,7 +53,7 @@ final class ApplyCommand extends Command
         if ($input->getOption("dry-run")) {
             $results = $rules->preview();
 
-            if (count($results) === 0) {
+            if ($results === []) {
                 $output->writeln("<info>No actions to execute</info>");
                 return Command::SUCCESS;
             }
@@ -71,6 +71,7 @@ final class ApplyCommand extends Command
                 foreach ($result->actions as $action) {
                     $output->writeln(sprintf("  - %s", $action::class));
                 }
+
                 $output->writeln("");
             }
 

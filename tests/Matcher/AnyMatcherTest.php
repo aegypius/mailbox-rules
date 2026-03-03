@@ -16,23 +16,23 @@ final class AnyMatcherTest extends TestCase
 {
     public function testAnyMatcherAlwaysReturnsTrue(): void
     {
-        $matcher = new AnyMatcher();
+        $anyMatcher = new AnyMatcher();
         $message = $this->createStub(Message::class);
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($anyMatcher->matches($message));
     }
 
     public function testAnyMatcherMatchesDifferentMessages(): void
     {
-        $matcher = new AnyMatcher();
+        $anyMatcher = new AnyMatcher();
 
         $message1 = $this->createStub(Message::class);
         $message2 = $this->createStub(Message::class);
         $message3 = $this->createStub(Message::class);
 
-        $this->assertTrue($matcher->matches($message1));
-        $this->assertTrue($matcher->matches($message2));
-        $this->assertTrue($matcher->matches($message3));
+        $this->assertTrue($anyMatcher->matches($message1));
+        $this->assertTrue($anyMatcher->matches($message2));
+        $this->assertTrue($anyMatcher->matches($message3));
     }
 
     public function testAnyHelperFunctionReturnsAnyMatcher(): void

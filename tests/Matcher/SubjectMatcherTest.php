@@ -17,110 +17,110 @@ final class SubjectMatcherTest extends TestCase
     #[Test]
     public function it_matches_exact_subject(): void
     {
-        $matcher = new SubjectMatcher('Important Meeting');
+        $subjectMatcher = new SubjectMatcher('Important Meeting');
         $message = $this->createMessageWithSubject('Important Meeting');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_does_not_match_different_subject(): void
     {
-        $matcher = new SubjectMatcher('Important Meeting');
+        $subjectMatcher = new SubjectMatcher('Important Meeting');
         $message = $this->createMessageWithSubject('Regular Update');
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_case_insensitively(): void
     {
-        $matcher = new SubjectMatcher('important meeting');
+        $subjectMatcher = new SubjectMatcher('important meeting');
         $message = $this->createMessageWithSubject('IMPORTANT MEETING');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_wildcard_pattern(): void
     {
-        $matcher = new SubjectMatcher('*urgent*');
+        $subjectMatcher = new SubjectMatcher('*urgent*');
         $message = $this->createMessageWithSubject('This is urgent please read');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_does_not_match_wildcard_when_no_match(): void
     {
-        $matcher = new SubjectMatcher('*urgent*');
+        $subjectMatcher = new SubjectMatcher('*urgent*');
         $message = $this->createMessageWithSubject('Regular meeting');
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_regex_pattern(): void
     {
-        $matcher = new SubjectMatcher('/^RE:.*/i');
+        $subjectMatcher = new SubjectMatcher('/^RE:.*/i');
         $message = $this->createMessageWithSubject('RE: Your question');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_does_not_match_regex_when_no_match(): void
     {
-        $matcher = new SubjectMatcher('/^RE:.*/i');
+        $subjectMatcher = new SubjectMatcher('/^RE:.*/i');
         $message = $this->createMessageWithSubject('FW: Your question');
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_handles_empty_subject(): void
     {
-        $matcher = new SubjectMatcher('test');
+        $subjectMatcher = new SubjectMatcher('test');
         $message = $this->createMessageWithSubject('');
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_empty_pattern_with_empty_subject(): void
     {
-        $matcher = new SubjectMatcher('');
+        $subjectMatcher = new SubjectMatcher('');
         $message = $this->createMessageWithSubject('');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_wildcard_prefix(): void
     {
-        $matcher = new SubjectMatcher('*Report');
+        $subjectMatcher = new SubjectMatcher('*Report');
         $message = $this->createMessageWithSubject('Weekly Report');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($subjectMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_wildcard_suffix(): void
     {
-        $matcher = new SubjectMatcher('Weekly*');
+        $subjectMatcher = new SubjectMatcher('Weekly*');
         $message = $this->createMessageWithSubject('Weekly Report');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($subjectMatcher->matches($message));
     }
 
     #[Test]
     #[DataProvider('provideMultiplePatterns')]
     public function it_matches_various_patterns(string $pattern, string $subject, bool $expected): void
     {
-        $matcher = new SubjectMatcher($pattern);
+        $subjectMatcher = new SubjectMatcher($pattern);
         $message = $this->createMessageWithSubject($subject);
 
-        $this->assertSame($expected, $matcher->matches($message));
+        $this->assertSame($expected, $subjectMatcher->matches($message));
     }
 
     /**

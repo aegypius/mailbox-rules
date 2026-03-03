@@ -13,17 +13,17 @@ use DirectoryTree\ImapEngine\Message;
  */
 final readonly class SubjectMatcher implements Matcher
 {
-    private PatternMatcher $matcher;
+    private PatternMatcher $patternMatcher;
 
     public function __construct(string $pattern)
     {
-        $this->matcher = new PatternMatcher($pattern);
+        $this->patternMatcher = new PatternMatcher($pattern);
     }
 
     public function matches(Message $message): bool
     {
         $subject = $message->subject();
 
-        return $this->matcher->matches($subject ?? '');
+        return $this->patternMatcher->matches($subject ?? '');
     }
 }

@@ -13,12 +13,12 @@ final readonly class Rule implements \Stringable
     /**
      * @param string $name The name of the rule
      * @param Matcher|null $matcher The matcher to evaluate (null for legacy rules)
-     * @param \Closure(Message): iterable<Action> $callback The callback that returns actions
+     * @param \Closure(Message): iterable<Action> $then The callback that returns actions
      */
     public function __construct(
         public string $name,
         public ?Matcher $matcher,
-        public \Closure $callback,
+        public \Closure $then,
     ) {
     }
 
@@ -33,12 +33,12 @@ final readonly class Rule implements \Stringable
     public function __invoke(Message $message): iterable
     {
         // If matcher exists and doesn't match, return empty
-        if ($this->matcher !== null && !$this->matcher->matches($message)) {
+        if ($this->matcher instanceof \MailboxRules\Matcher\Matcher && !$this->matcher->matches($message)) {
             return [];
         }
 
         // Otherwise execute callback (legacy or matched)
-        return ($this->callback)($message);
+        return ($this->then)($message);
     }
 
 

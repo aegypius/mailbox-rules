@@ -22,27 +22,23 @@ use DirectoryTree\ImapEngine\Message;
  */
 final readonly class BodyMatcher implements Matcher
 {
-    private PatternMatcher $matcher;
+    private PatternMatcher $patternMatcher;
 
     public function __construct(string $pattern)
     {
-        $this->matcher = new PatternMatcher($pattern);
+        $this->patternMatcher = new PatternMatcher($pattern);
     }
 
     public function matches(Message $message): bool
     {
         // Check plain text body
         $text = $message->text();
-        if ($text !== null && $this->matcher->matches($text)) {
+        if ($text !== null && $this->patternMatcher->matches($text)) {
             return true;
         }
 
         // Check HTML body
         $html = $message->html();
-        if ($html !== null && $this->matcher->matches($html)) {
-            return true;
-        }
-
-        return false;
+        return $html !== null && $this->patternMatcher->matches($html);
     }
 }

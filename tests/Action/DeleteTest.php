@@ -19,8 +19,8 @@ final class DeleteTest extends TestCase
             ->method('delete')
             ->with(true);
 
-        $action = new Delete();
-        $action($message);
+        $delete = new Delete();
+        $delete($message);
     }
 
     public function testDeletesMessageWithoutExpungeWhenSpecified(): void
@@ -30,8 +30,8 @@ final class DeleteTest extends TestCase
             ->method('delete')
             ->with(false);
 
-        $action = new Delete(expunge: false);
-        $action($message);
+        $delete = new Delete(expunge: false);
+        $delete($message);
     }
 
     public function testDeletesMessageWithExpungeWhenExplicitlyEnabled(): void
@@ -41,7 +41,7 @@ final class DeleteTest extends TestCase
             ->method('delete')
             ->with(true);
 
-        $action = new Delete(expunge: true);
-        $action($message);
+        $delete = new Delete(expunge: true);
+        $delete($message);
     }
 }

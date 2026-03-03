@@ -30,6 +30,7 @@ final class RuleFileLoader
             if ($cached instanceof Rules) {
                 return $cached;
             }
+
             $result = require $resource;
             assert($result instanceof Rules);
             self::$cache[$resource] = $result;

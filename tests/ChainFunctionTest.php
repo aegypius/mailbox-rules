@@ -17,10 +17,10 @@ final class ChainFunctionTest extends TestCase
 {
     public function testReturnsIterableOfActions(): void
     {
-        $action1 = new MoveToFolder('Archive');
-        $action2 = new MarkAsRead();
+        $moveToFolder = new MoveToFolder('Archive');
+        $markAsRead = new MarkAsRead();
 
-        $result = chain($action1, $action2);
+        $result = chain($moveToFolder, $markAsRead);
         $actions = iterator_to_array($result);
 
         $this->assertCount(2, $actions);
@@ -28,28 +28,28 @@ final class ChainFunctionTest extends TestCase
 
     public function testYieldsActionsInOrder(): void
     {
-        $action1 = new MoveToFolder('Archive');
-        $action2 = new MarkAsRead();
-        $action3 = new Flag();
+        $moveToFolder = new MoveToFolder('Archive');
+        $markAsRead = new MarkAsRead();
+        $flag = new Flag();
 
-        $result = chain($action1, $action2, $action3);
+        $result = chain($moveToFolder, $markAsRead, $flag);
         $actions = iterator_to_array($result);
 
         $this->assertCount(3, $actions);
-        $this->assertSame($action1, $actions[0]);
-        $this->assertSame($action2, $actions[1]);
-        $this->assertSame($action3, $actions[2]);
+        $this->assertSame($moveToFolder, $actions[0]);
+        $this->assertSame($markAsRead, $actions[1]);
+        $this->assertSame($flag, $actions[2]);
     }
 
     public function testWorksWithSingleAction(): void
     {
-        $action = new MoveToFolder('Spam');
+        $moveToFolder = new MoveToFolder('Spam');
 
-        $result = chain($action);
+        $result = chain($moveToFolder);
         $actions = iterator_to_array($result);
 
         $this->assertCount(1, $actions);
-        $this->assertSame($action, $actions[0]);
+        $this->assertSame($moveToFolder, $actions[0]);
     }
 
     public function testWorksWithNoActions(): void
@@ -62,24 +62,24 @@ final class ChainFunctionTest extends TestCase
 
     public function testReturnsGenerator(): void
     {
-        $action1 = new MoveToFolder('Archive');
-        $action2 = new MarkAsRead();
+        $moveToFolder = new MoveToFolder('Archive');
+        $markAsRead = new MarkAsRead();
 
-        $result = chain($action1, $action2);
+        $result = chain($moveToFolder, $markAsRead);
 
         $this->assertInstanceOf(\Generator::class, $result);
     }
 
     public function testCanBeIteratedMultipleTimes(): void
     {
-        $action1 = new MoveToFolder('Archive');
-        $action2 = new MarkAsRead();
+        $moveToFolder = new MoveToFolder('Archive');
+        $markAsRead = new MarkAsRead();
 
         // Generator can only be iterated once, so we need to call chain() twice
-        $result1 = chain($action1, $action2);
+        $result1 = chain($moveToFolder, $markAsRead);
         $actions1 = iterator_to_array($result1);
 
-        $result2 = chain($action1, $action2);
+        $result2 = chain($moveToFolder, $markAsRead);
         $actions2 = iterator_to_array($result2);
 
         $this->assertEquals($actions1, $actions2);

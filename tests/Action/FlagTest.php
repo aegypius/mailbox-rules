@@ -18,8 +18,8 @@ final class FlagTest extends TestCase
         $message->expects($this->once())
             ->method('markFlagged');
 
-        $action = new Flag();
-        $action($message);
+        $flag = new Flag();
+        $flag($message);
     }
 
     public function testMarksFlaggedWithoutExpungeByDefault(): void
@@ -29,7 +29,7 @@ final class FlagTest extends TestCase
         $message->expects($this->once())
             ->method('markFlagged');
 
-        $action = new Flag();
-        $action($message);
+        $flag = new Flag();
+        $flag($message);
     }
 }

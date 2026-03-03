@@ -21,75 +21,75 @@ final class RecipientMatcherTest extends TestCase
 
     public function testMatchesToRecipient(): void
     {
-        $to = $this->createAddress('to@example.com');
+        $address = $this->createAddress('to@example.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('to')->willReturn([$to]);
+        $message->method('to')->willReturn([$address]);
         $message->method('cc')->willReturn([]);
         $message->method('bcc')->willReturn([]);
 
-        $matcher = new RecipientMatcher('to@example.com');
+        $recipientMatcher = new RecipientMatcher('to@example.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($recipientMatcher->matches($message));
     }
 
     public function testMatchesCcRecipient(): void
     {
-        $cc = $this->createAddress('cc@example.com');
+        $address = $this->createAddress('cc@example.com');
 
         $message = $this->createStub(Message::class);
         $message->method('to')->willReturn([]);
-        $message->method('cc')->willReturn([$cc]);
+        $message->method('cc')->willReturn([$address]);
         $message->method('bcc')->willReturn([]);
 
-        $matcher = new RecipientMatcher('cc@example.com');
+        $recipientMatcher = new RecipientMatcher('cc@example.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($recipientMatcher->matches($message));
     }
 
     public function testMatchesBccRecipient(): void
     {
-        $bcc = $this->createAddress('bcc@example.com');
+        $address = $this->createAddress('bcc@example.com');
 
         $message = $this->createStub(Message::class);
         $message->method('to')->willReturn([]);
         $message->method('cc')->willReturn([]);
-        $message->method('bcc')->willReturn([$bcc]);
+        $message->method('bcc')->willReturn([$address]);
 
-        $matcher = new RecipientMatcher('bcc@example.com');
+        $recipientMatcher = new RecipientMatcher('bcc@example.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($recipientMatcher->matches($message));
     }
 
     public function testMatchesAnyRecipientType(): void
     {
-        $to = $this->createAddress('to@example.com');
+        $address = $this->createAddress('to@example.com');
         $cc = $this->createAddress('cc@other.com');
         $bcc = $this->createAddress('bcc@third.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('to')->willReturn([$to]);
+        $message->method('to')->willReturn([$address]);
         $message->method('cc')->willReturn([$cc]);
         $message->method('bcc')->willReturn([$bcc]);
 
-        $matcher = new RecipientMatcher('*@other.com');
+        $recipientMatcher = new RecipientMatcher('*@other.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($recipientMatcher->matches($message));
     }
 
     public function testDoesNotMatchWhenNotInAnyField(): void
     {
-        $to = $this->createAddress('to@example.com');
+        $address = $this->createAddress('to@example.com');
         $cc = $this->createAddress('cc@example.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('to')->willReturn([$to]);
+        $message->method('to')->willReturn([$address]);
         $message->method('cc')->willReturn([$cc]);
         $message->method('bcc')->willReturn([]);
 
-        $matcher = new RecipientMatcher('user@other.com');
+        $recipientMatcher = new RecipientMatcher('user@other.com');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($recipientMatcher->matches($message));
     }
 
     public function testReturnsFalseForNoRecipients(): void
@@ -99,8 +99,8 @@ final class RecipientMatcherTest extends TestCase
         $message->method('cc')->willReturn([]);
         $message->method('bcc')->willReturn([]);
 
-        $matcher = new RecipientMatcher('user@example.com');
+        $recipientMatcher = new RecipientMatcher('user@example.com');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($recipientMatcher->matches($message));
     }
 }

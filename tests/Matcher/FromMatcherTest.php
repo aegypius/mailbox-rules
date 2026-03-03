@@ -18,82 +18,82 @@ final class FromMatcherTest extends TestCase
     #[Test]
     public function it_implements_matcher_interface(): void
     {
-        $matcher = new FromMatcher('test@example.com');
-        $this->assertInstanceOf(\MailboxRules\Matcher\Matcher::class, $matcher);
+        $fromMatcher = new FromMatcher('test@example.com');
+        $this->assertInstanceOf(\MailboxRules\Matcher\Matcher::class, $fromMatcher);
     }
 
     #[Test]
     public function it_matches_exact_email(): void
     {
-        $matcher = new FromMatcher('sender@example.com');
+        $fromMatcher = new FromMatcher('sender@example.com');
         $message = $this->createMessageWithFrom('sender@example.com');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($fromMatcher->matches($message));
     }
 
     #[Test]
     public function it_does_not_match_different_email(): void
     {
-        $matcher = new FromMatcher('sender@example.com');
+        $fromMatcher = new FromMatcher('sender@example.com');
         $message = $this->createMessageWithFrom('other@example.com');
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($fromMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_wildcard_domain(): void
     {
-        $matcher = new FromMatcher('*@chaosium.com');
+        $fromMatcher = new FromMatcher('*@chaosium.com');
         $message = $this->createMessageWithFrom('newsletter@chaosium.com');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($fromMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_wildcard_local_part(): void
     {
-        $matcher = new FromMatcher('newsletter-*@example.com');
+        $fromMatcher = new FromMatcher('newsletter-*@example.com');
         $message = $this->createMessageWithFrom('newsletter-2024@example.com');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($fromMatcher->matches($message));
     }
 
     #[Test]
     public function it_matches_regex_pattern(): void
     {
-        $matcher = new FromMatcher('/^newsletter-\d+@example\.com$/i');
+        $fromMatcher = new FromMatcher('/^newsletter-\d+@example\.com$/i');
         $message = $this->createMessageWithFrom('newsletter-2024@example.com');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($fromMatcher->matches($message));
     }
 
     #[Test]
     public function it_handles_case_insensitive_exact_match(): void
     {
-        $matcher = new FromMatcher('Sender@Example.COM');
+        $fromMatcher = new FromMatcher('Sender@Example.COM');
         $message = $this->createMessageWithFrom('sender@example.com');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($fromMatcher->matches($message));
     }
 
     #[Test]
     public function it_returns_false_when_from_is_null(): void
     {
-        $matcher = new FromMatcher('test@example.com');
+        $fromMatcher = new FromMatcher('test@example.com');
         $message = $this->createStub(Message::class);
         $message->method('from')->willReturn(null);
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($fromMatcher->matches($message));
     }
 
     #[Test]
     #[DataProvider('provideMultiplePatterns')]
     public function it_matches_various_patterns(string $pattern, string $email, bool $expected): void
     {
-        $matcher = new FromMatcher($pattern);
+        $fromMatcher = new FromMatcher($pattern);
         $message = $this->createMessageWithFrom($email);
 
-        $this->assertSame($expected, $matcher->matches($message));
+        $this->assertSame($expected, $fromMatcher->matches($message));
     }
 
     /**

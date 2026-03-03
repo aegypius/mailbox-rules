@@ -17,9 +17,9 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(512);
 
-        $matcher = new SmallerThanMatcher(1024);
+        $smallerThanMatcher = new SmallerThanMatcher(1024);
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($smallerThanMatcher->matches($message));
     }
 
     public function test_does_not_match_message_larger_than_bytes(): void
@@ -27,9 +27,9 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(2048);
 
-        $matcher = new SmallerThanMatcher(1024);
+        $smallerThanMatcher = new SmallerThanMatcher(1024);
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($smallerThanMatcher->matches($message));
     }
 
     public function test_does_not_match_message_equal_to_bytes(): void
@@ -37,9 +37,9 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(1024);
 
-        $matcher = new SmallerThanMatcher(1024);
+        $smallerThanMatcher = new SmallerThanMatcher(1024);
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($smallerThanMatcher->matches($message));
     }
 
     public function test_does_not_match_message_with_null_size(): void
@@ -47,9 +47,9 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(null);
 
-        $matcher = new SmallerThanMatcher(1024);
+        $smallerThanMatcher = new SmallerThanMatcher(1024);
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($smallerThanMatcher->matches($message));
     }
 
     public function test_accepts_human_readable_size_kb(): void
@@ -57,9 +57,9 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(512);
 
-        $matcher = new SmallerThanMatcher('1KB');
+        $smallerThanMatcher = new SmallerThanMatcher('1KB');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($smallerThanMatcher->matches($message));
     }
 
     public function test_accepts_human_readable_size_mb(): void
@@ -67,9 +67,9 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(524_288); // 512KB
 
-        $matcher = new SmallerThanMatcher('1MB');
+        $smallerThanMatcher = new SmallerThanMatcher('1MB');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($smallerThanMatcher->matches($message));
     }
 
     public function test_accepts_human_readable_size_gb(): void
@@ -77,9 +77,9 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(536_870_912); // 512MB
 
-        $matcher = new SmallerThanMatcher('1GB');
+        $smallerThanMatcher = new SmallerThanMatcher('1GB');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($smallerThanMatcher->matches($message));
     }
 
     public function test_accepts_lowercase_units(): void
@@ -87,9 +87,9 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(512);
 
-        $matcher = new SmallerThanMatcher('1kb');
+        $smallerThanMatcher = new SmallerThanMatcher('1kb');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($smallerThanMatcher->matches($message));
     }
 
     public function test_accepts_size_with_space(): void
@@ -97,8 +97,8 @@ final class SmallerThanMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('size')->willReturn(512);
 
-        $matcher = new SmallerThanMatcher('1 KB');
+        $smallerThanMatcher = new SmallerThanMatcher('1 KB');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($smallerThanMatcher->matches($message));
     }
 }

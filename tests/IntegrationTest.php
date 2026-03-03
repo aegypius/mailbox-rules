@@ -131,7 +131,7 @@ final class IntegrationTest extends TestCase
         $rule = rule(
             name: 'Process Important',
             when: subject('*[Important]*'),
-            then: static fn (Message $message) => chain(
+            then: static fn (Message $message): \Generator => chain(
                 new MoveToFolder('Important'),
                 new MarkAsRead(),
                 new Flag()

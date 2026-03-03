@@ -21,9 +21,9 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('date')->willReturn($messageDate);
 
-        $matcher = new ReceivedBeforeMatcher($cutoff);
+        $receivedBeforeMatcher = new ReceivedBeforeMatcher($cutoff);
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($receivedBeforeMatcher->matches($message));
     }
 
     public function test_does_not_match_message_received_after_datetime(): void
@@ -34,9 +34,9 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('date')->willReturn($messageDate);
 
-        $matcher = new ReceivedBeforeMatcher($cutoff);
+        $receivedBeforeMatcher = new ReceivedBeforeMatcher($cutoff);
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($receivedBeforeMatcher->matches($message));
     }
 
     public function test_does_not_match_message_received_at_exact_datetime(): void
@@ -47,9 +47,9 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('date')->willReturn($messageDate);
 
-        $matcher = new ReceivedBeforeMatcher($cutoff);
+        $receivedBeforeMatcher = new ReceivedBeforeMatcher($cutoff);
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($receivedBeforeMatcher->matches($message));
     }
 
     public function test_does_not_match_message_with_null_date(): void
@@ -59,9 +59,9 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('date')->willReturn(null);
 
-        $matcher = new ReceivedBeforeMatcher($cutoff);
+        $receivedBeforeMatcher = new ReceivedBeforeMatcher($cutoff);
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($receivedBeforeMatcher->matches($message));
     }
 
     public function test_accepts_string_datetime(): void
@@ -71,9 +71,9 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('date')->willReturn($messageDate);
 
-        $matcher = new ReceivedBeforeMatcher('2024-01-15 12:00:00');
+        $receivedBeforeMatcher = new ReceivedBeforeMatcher('2024-01-15 12:00:00');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($receivedBeforeMatcher->matches($message));
     }
 
     public function test_accepts_relative_datetime_string(): void
@@ -83,9 +83,9 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('date')->willReturn($messageDate);
 
-        $matcher = new ReceivedBeforeMatcher('3 hours ago');
+        $receivedBeforeMatcher = new ReceivedBeforeMatcher('3 hours ago');
 
-        $this->assertTrue($matcher->matches($message));
+        $this->assertTrue($receivedBeforeMatcher->matches($message));
     }
 
     public function test_does_not_match_recent_message_with_relative_datetime(): void
@@ -95,8 +95,8 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('date')->willReturn($messageDate);
 
-        $matcher = new ReceivedBeforeMatcher('3 hours ago');
+        $receivedBeforeMatcher = new ReceivedBeforeMatcher('3 hours ago');
 
-        $this->assertFalse($matcher->matches($message));
+        $this->assertFalse($receivedBeforeMatcher->matches($message));
     }
 }

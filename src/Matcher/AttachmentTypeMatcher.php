@@ -18,17 +18,11 @@ final readonly class AttachmentTypeMatcher implements Matcher
     {
         $attachments = $message->attachments();
 
-        if (empty($attachments)) {
+        if ($attachments === []) {
             return false;
         }
 
-        foreach ($attachments as $attachment) {
-            if ($this->matchesPattern($attachment)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($attachments, fn (\DirectoryTree\ImapEngine\Attachment $attachment): bool => $this->matchesPattern($attachment));
     }
 
     private function matchesPattern(Attachment $attachment): bool

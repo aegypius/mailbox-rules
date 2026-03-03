@@ -15,9 +15,9 @@ final class PatternMatcherTest extends TestCase
     #[DataProvider('exactMatchProvider')]
     public function testExactMatch(string $pattern, string $value, bool $expected): void
     {
-        $matcher = new PatternMatcher($pattern);
+        $patternMatcher = new PatternMatcher($pattern);
 
-        $this->assertSame($expected, $matcher->matches($value));
+        $this->assertSame($expected, $patternMatcher->matches($value));
     }
 
     /**
@@ -36,9 +36,9 @@ final class PatternMatcherTest extends TestCase
     #[DataProvider('wildcardMatchProvider')]
     public function testWildcardMatch(string $pattern, string $value, bool $expected): void
     {
-        $matcher = new PatternMatcher($pattern);
+        $patternMatcher = new PatternMatcher($pattern);
 
-        $this->assertSame($expected, $matcher->matches($value));
+        $this->assertSame($expected, $patternMatcher->matches($value));
     }
 
     /**
@@ -64,9 +64,9 @@ final class PatternMatcherTest extends TestCase
     #[DataProvider('regexMatchProvider')]
     public function testRegexMatch(string $pattern, string $value, bool $expected): void
     {
-        $matcher = new PatternMatcher($pattern);
+        $patternMatcher = new PatternMatcher($pattern);
 
-        $this->assertSame($expected, $matcher->matches($value));
+        $this->assertSame($expected, $patternMatcher->matches($value));
     }
 
     /**
@@ -85,16 +85,16 @@ final class PatternMatcherTest extends TestCase
 
     public function testEmptyPattern(): void
     {
-        $matcher = new PatternMatcher('');
+        $patternMatcher = new PatternMatcher('');
 
-        $this->assertTrue($matcher->matches(''));
-        $this->assertFalse($matcher->matches('anything'));
+        $this->assertTrue($patternMatcher->matches(''));
+        $this->assertFalse($patternMatcher->matches('anything'));
     }
 
     public function testEmptyValue(): void
     {
-        $matcher = new PatternMatcher('user@example.com');
+        $patternMatcher = new PatternMatcher('user@example.com');
 
-        $this->assertFalse($matcher->matches(''));
+        $this->assertFalse($patternMatcher->matches(''));
     }
 }

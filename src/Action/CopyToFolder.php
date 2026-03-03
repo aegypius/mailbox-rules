@@ -29,7 +29,7 @@ final readonly class CopyToFolder implements Action
 
         // Ensure the target folder exists, create if needed
         // Note: folders()->find() and folders()->create() handle UTF-7 encoding internally
-        if ($mailbox->folders()->find($this->folder) === null) {
+        if (!$mailbox->folders()->find($this->folder) instanceof \DirectoryTree\ImapEngine\FolderInterface) {
             $mailbox->folders()->create($this->folder);
         }
 

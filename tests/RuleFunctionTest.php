@@ -20,7 +20,7 @@ final class RuleFunctionTest extends TestCase
     {
         $rule = rule(
             name: "Test Rule",
-            callback: static fn (Message $message): iterable => []
+            then: static fn (Message $message): iterable => []
         );
 
         $this->assertInstanceOf(Rule::class, $rule);
@@ -62,26 +62,5 @@ final class RuleFunctionTest extends TestCase
         $result = ($rule)($message);
 
         $this->assertSame($actions, iterator_to_array($result));
-    }
-
-    public function testBackwardCompatibilityWithCallbackOnly(): void
-    {
-        $callback = static fn (Message $message): iterable => [
-            new class() implements Action {
-                public function __invoke(Message $message): void
-                {
-                }
-            },
-        ];
-
-        $rule = rule(
-            name: "Legacy Rule",
-            callback: $callback
-        );
-
-        $message = $this->createStub(Message::class);
-        $result = ($rule)($message);
-
-        $this->assertCount(1, iterator_to_array($result));
     }
 }

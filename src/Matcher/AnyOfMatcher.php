@@ -25,12 +25,6 @@ final readonly class AnyOfMatcher implements Matcher
 
     public function matches(Message $message): bool
     {
-        foreach ($this->matchers as $matcher) {
-            if ($matcher->matches($message)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($this->matchers, fn ($matcher) => $matcher->matches($message));
     }
 }

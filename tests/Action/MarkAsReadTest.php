@@ -18,8 +18,8 @@ final class MarkAsReadTest extends TestCase
         $message->expects($this->once())
             ->method('markRead');
 
-        $action = new MarkAsRead();
-        $action($message);
+        $markAsRead = new MarkAsRead();
+        $markAsRead($message);
     }
 
     public function testMarksMessageAsReadAlternativeName(): void
@@ -29,7 +29,7 @@ final class MarkAsReadTest extends TestCase
         $message->expects($this->once())
             ->method('markRead');
 
-        $action = new MarkAsRead();
-        $action($message);
+        $markAsRead = new MarkAsRead();
+        $markAsRead($message);
     }
 }

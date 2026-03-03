@@ -18,7 +18,7 @@ class UnflagTest extends TestCase
         $message->expects($this->once())
             ->method('unmarkFlagged');
 
-        $action = new Unflag();
-        $action($message);
+        $unflag = new Unflag();
+        $unflag($message);
     }
 }

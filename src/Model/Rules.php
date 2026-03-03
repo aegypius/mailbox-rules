@@ -33,19 +33,20 @@ final readonly class Rules
                 // when actions modify the message (e.g., move/delete)
                 $actionsList = is_array($actions) ? $actions : iterator_to_array($actions, false);
 
-                foreach ($actionsList as $action) {
+                foreach ($actionsList as $actionList) {
                     // Cast to callable for PHPStan - all Actions implement __invoke
                     /** @var callable $callableAction */
-                    $callableAction = $action;
+                    $callableAction = $actionList;
                     Callback::createFor($callableAction)->invokeAll(
                         Parameter::union(...$this->useParameters($message))
                     );
                 }
             } catch (\Exception $e) {
                 if (str_contains($e->getMessage(), 'closed generator')) {
-                    $this->logger->warning("Skipping rule '{$rule->name}' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.");
+                    $this->logger->warning(sprintf("Skipping rule '%s' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.", $rule->name));
                     continue;
                 }
+
                 throw $e;
             }
         }
@@ -98,10 +99,10 @@ final readonly class Rules
     public function preview(): array
     {
         $this->mailbox->connect();
-        $query = $this->mailbox->inbox()->messages()->withHeaders()->limit(10);
+        $messageQuery = $this->mailbox->inbox()->messages()->withHeaders()->limit(10);
         $results = [];
 
-        foreach ($query->get() as $message) {
+        foreach ($messageQuery->get() as $message) {
             assert($message instanceof Message);
 
             foreach ($this->rules as $rule) {

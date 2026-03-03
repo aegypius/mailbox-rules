@@ -21,51 +21,51 @@ final class CcMatcherTest extends TestCase
 
     public function testMatchesExactCcAddress(): void
     {
-        $cc = $this->createAddress('cc@example.com');
+        $address = $this->createAddress('cc@example.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('cc')->willReturn([$cc]);
+        $message->method('cc')->willReturn([$address]);
 
-        $matcher = new CcMatcher('cc@example.com');
+        $ccMatcher = new CcMatcher('cc@example.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($ccMatcher->matches($message));
     }
 
     public function testMatchesWithWildcard(): void
     {
-        $cc = $this->createAddress('user@example.com');
+        $address = $this->createAddress('user@example.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('cc')->willReturn([$cc]);
+        $message->method('cc')->willReturn([$address]);
 
-        $matcher = new CcMatcher('*@example.com');
+        $ccMatcher = new CcMatcher('*@example.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($ccMatcher->matches($message));
     }
 
     public function testMatchesAnyCcRecipient(): void
     {
-        $cc1 = $this->createAddress('first@example.com');
+        $address = $this->createAddress('first@example.com');
         $cc2 = $this->createAddress('second@other.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('cc')->willReturn([$cc1, $cc2]);
+        $message->method('cc')->willReturn([$address, $cc2]);
 
-        $matcher = new CcMatcher('*@other.com');
+        $ccMatcher = new CcMatcher('*@other.com');
 
-        self::assertTrue($matcher->matches($message));
+        self::assertTrue($ccMatcher->matches($message));
     }
 
     public function testDoesNotMatchDifferentDomain(): void
     {
-        $cc = $this->createAddress('user@example.com');
+        $address = $this->createAddress('user@example.com');
 
         $message = $this->createStub(Message::class);
-        $message->method('cc')->willReturn([$cc]);
+        $message->method('cc')->willReturn([$address]);
 
-        $matcher = new CcMatcher('*@other.com');
+        $ccMatcher = new CcMatcher('*@other.com');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($ccMatcher->matches($message));
     }
 
     public function testReturnsFalseForNoCcRecipients(): void
@@ -73,8 +73,8 @@ final class CcMatcherTest extends TestCase
         $message = $this->createStub(Message::class);
         $message->method('cc')->willReturn([]);
 
-        $matcher = new CcMatcher('user@example.com');
+        $ccMatcher = new CcMatcher('user@example.com');
 
-        self::assertFalse($matcher->matches($message));
+        self::assertFalse($ccMatcher->matches($message));
     }
 }

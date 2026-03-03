@@ -50,7 +50,7 @@ class RulesPreviewTest extends TestCase
         $rule = new Rule(
             name: 'Test Rule',
             matcher: null,
-            callback: static fn () => yield new MoveToFolder('Folder')
+            then: static fn () => yield new MoveToFolder('Folder')
         );
 
         $rules = new Rules($mailbox, [$rule]);
@@ -72,7 +72,7 @@ class RulesPreviewTest extends TestCase
         $rule = new Rule(
             name: 'Multi-Action Rule',
             matcher: null,
-            callback: static function () {
+            then: static function () {
                 yield new MoveToFolder('Archive');
                 yield new MarkAsRead();
                 yield new Flag();
@@ -97,13 +97,13 @@ class RulesPreviewTest extends TestCase
         $rule1 = new Rule(
             name: 'Rule 1',
             matcher: null,
-            callback: static fn () => yield new MoveToFolder('Folder1')
+            then: static fn () => yield new MoveToFolder('Folder1')
         );
 
         $rule2 = new Rule(
             name: 'Rule 2',
             matcher: null,
-            callback: static fn () => yield new MarkAsRead()
+            then: static fn () => yield new MarkAsRead()
         );
 
         $rules = new Rules($mailbox, [$rule1, $rule2]);
@@ -125,7 +125,7 @@ class RulesPreviewTest extends TestCase
         $rule = new Rule(
             name: 'Non-matching Rule',
             matcher: $matcher,
-            callback: static fn () => yield new MoveToFolder('Folder')
+            then: static fn () => yield new MoveToFolder('Folder')
         );
 
         $rules = new Rules($mailbox, [$rule]);
@@ -143,7 +143,7 @@ class RulesPreviewTest extends TestCase
         $rule = new Rule(
             name: 'Test Rule',
             matcher: null,
-            callback: static fn () => yield new Flag()
+            then: static fn () => yield new Flag()
         );
 
         $rules = new Rules($mailbox, [$rule]);

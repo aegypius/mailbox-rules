@@ -20,8 +20,8 @@ final class MoveToFolderTest extends TestCase
             ->with('Archive')
             ->willReturn(12345);
 
-        $action = new MoveToFolder('Archive');
-        $action($message);
+        $moveToFolder = new MoveToFolder('Archive');
+        $moveToFolder($message);
     }
 
     public function testMovesMessageWithExpunge(): void
@@ -32,8 +32,8 @@ final class MoveToFolderTest extends TestCase
             ->with('Trash', true)
             ->willReturn(67890);
 
-        $action = new MoveToFolder('Trash', expunge: true);
-        $action($message);
+        $moveToFolder = new MoveToFolder('Trash', expunge: true);
+        $moveToFolder($message);
     }
 
     public function testMovesMessageWithoutExpungeByDefault(): void
@@ -44,8 +44,8 @@ final class MoveToFolderTest extends TestCase
             ->with('Important', false)
             ->willReturn(11111);
 
-        $action = new MoveToFolder('Important');
-        $action($message);
+        $moveToFolder = new MoveToFolder('Important');
+        $moveToFolder($message);
     }
 
     public function testMovesToNestedFolder(): void
@@ -56,8 +56,8 @@ final class MoveToFolderTest extends TestCase
             ->with('Projects/ClientA')
             ->willReturn(22222);
 
-        $action = new MoveToFolder('Projects/ClientA');
-        $action($message);
+        $moveToFolder = new MoveToFolder('Projects/ClientA');
+        $moveToFolder($message);
     }
 
     public function testHandlesNullReturnFromMove(): void
@@ -68,8 +68,8 @@ final class MoveToFolderTest extends TestCase
             ->with('Archive')
             ->willReturn(null);
 
-        $action = new MoveToFolder('Archive');
-        $action($message);
+        $moveToFolder = new MoveToFolder('Archive');
+        $moveToFolder($message);
 
         // No exception thrown - action completes successfully
     }
@@ -82,8 +82,8 @@ final class MoveToFolderTest extends TestCase
             ->with('Copropri&AOk-t&AOk-', false)
             ->willReturn(12345);
 
-        $action = new MoveToFolder('Copropriété');
-        $action($message);
+        $moveToFolder = new MoveToFolder('Copropriété');
+        $moveToFolder($message);
     }
 
     public function testEncodesCyrillicCharactersToModifiedUtf7(): void
@@ -94,8 +94,8 @@ final class MoveToFolderTest extends TestCase
             ->with('&BBoEPgRABDcEOAQ9BDA-', false)
             ->willReturn(67890);
 
-        $action = new MoveToFolder('Корзина');
-        $action($message);
+        $moveToFolder = new MoveToFolder('Корзина');
+        $moveToFolder($message);
     }
 
     public function testEncodesAmpersandToModifiedUtf7(): void
@@ -106,7 +106,7 @@ final class MoveToFolderTest extends TestCase
             ->with('Inbox &- Archive', false)
             ->willReturn(11111);
 
-        $action = new MoveToFolder('Inbox & Archive');
-        $action($message);
+        $moveToFolder = new MoveToFolder('Inbox & Archive');
+        $moveToFolder($message);
     }
 }

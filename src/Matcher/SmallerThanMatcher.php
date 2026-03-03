@@ -18,7 +18,7 @@ final readonly class SmallerThanMatcher implements Matcher
      */
     public function __construct(int|string $size)
     {
-        $this->bytes = is_int($size) ? $size : self::parseSize($size);
+        $this->bytes = is_int($size) ? $size : $this->parseSize($size);
     }
 
     public function matches(Message $message): bool
@@ -32,7 +32,7 @@ final readonly class SmallerThanMatcher implements Matcher
         return $messageSize < $this->bytes;
     }
 
-    private static function parseSize(string $size): int
+    private function parseSize(string $size): int
     {
         $size = trim($size);
         $size = strtoupper($size);

@@ -19,8 +19,8 @@ final class MoveToTrashTest extends TestCase
             ->method('move')
             ->with('Trash', false);
 
-        $action = new MoveToTrash();
-        $action($message);
+        $moveToTrash = new MoveToTrash();
+        $moveToTrash($message);
     }
 
     public function testMovesToCustomTrashFolder(): void
@@ -30,8 +30,8 @@ final class MoveToTrashTest extends TestCase
             ->method('move')
             ->with('[Gmail]/Trash', false);
 
-        $action = new MoveToTrash(trashFolder: '[Gmail]/Trash');
-        $action($message);
+        $moveToTrash = new MoveToTrash(trashFolder: '[Gmail]/Trash');
+        $moveToTrash($message);
     }
 
     public function testMovesToTrashWithExpunge(): void
@@ -41,7 +41,7 @@ final class MoveToTrashTest extends TestCase
             ->method('move')
             ->with('Deleted Items', true);
 
-        $action = new MoveToTrash(trashFolder: 'Deleted Items', expunge: true);
-        $action($message);
+        $moveToTrash = new MoveToTrash(trashFolder: 'Deleted Items', expunge: true);
+        $moveToTrash($message);
     }
 }

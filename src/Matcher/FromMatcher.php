@@ -25,7 +25,7 @@ final readonly class FromMatcher implements Matcher
         $from = $message->from();
 
         // No sender address
-        if ($from === null) {
+        if (!$from instanceof \DirectoryTree\ImapEngine\Address) {
             return false;
         }
 

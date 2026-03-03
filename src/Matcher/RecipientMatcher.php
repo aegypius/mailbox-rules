@@ -24,26 +24,19 @@ final readonly class RecipientMatcher implements Matcher
     public function matches(Message $message): bool
     {
         // Check To recipients
-        foreach ($message->to() as $recipient) {
-            if ($this->patternMatcher->matches($recipient->email())) {
+        foreach ($message->to() as $address) {
+            if ($this->patternMatcher->matches($address->email())) {
                 return true;
             }
         }
 
         // Check CC recipients
-        foreach ($message->cc() as $recipient) {
-            if ($this->patternMatcher->matches($recipient->email())) {
+        foreach ($message->cc() as $address) {
+            if ($this->patternMatcher->matches($address->email())) {
                 return true;
             }
         }
 
-        // Check BCC recipients
-        foreach ($message->bcc() as $recipient) {
-            if ($this->patternMatcher->matches($recipient->email())) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($message->bcc(), fn ($recipient): bool => $this->patternMatcher->matches($recipient->email()));
     }
 }

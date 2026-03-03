@@ -66,87 +66,52 @@ function mailbox(string|Dsn $dsn, iterable $rules): Rules
  * 2. Matcher-based: rule(name, when: matcher, then: callable|iterable)
  *
  * @param string $name The name of the rule.
- * @param \Closure(Message): iterable<Action>|null $callback The callback (legacy signature).
  * @param Matcher|null $when The matcher to evaluate (new signature).
  * @param \Closure(Message): iterable<Action>|iterable<Action>|null $then The action callback or iterable (new signature).
  * @return Rule The created Rule object.
  */
 function rule(
     string $name,
-    ?\Closure $callback = null,
     ?Matcher $when = null,
     \Closure|iterable|null $then = null
 ): Rule {
-    // New signature: rule(name, when: matcher, then: callable|iterable)
-    if ($when !== null && $then !== null) {
-        // If $then is already iterable (Generator, array), materialize it to array
-        // so it can be reused across multiple messages (generators are not rewindable)
-        if (!$then instanceof \Closure) {
-            $actions = is_array($then) ? $then : iterator_to_array($then, false);
-            $then = static fn () => $actions;
-        } else {
-            // Wrap closure to detect reused generators
-            /** @var \WeakMap<\Generator, list<Action>> $seenGenerators */
-            $seenGenerators = new \WeakMap();
-            $originalThen = $then;
-            /**
-             * @param Message $message
-             * @return iterable<Action>
-             */
-            $then = static function (Message $message) use ($seenGenerators, $originalThen): iterable {
-                $actions = $originalThen($message);
-
-                // If it's a Generator, check if we've seen it before
-                if ($actions instanceof \Generator) {
-                    // If this generator instance was returned before, it means the closure
-                    // is reusing the same generator object (a bug). Materialize to array.
-                    if (isset($seenGenerators[$actions])) {
-                        return $seenGenerators[$actions];
-                    }
-
-                    // First time seeing this generator, materialize and cache it
-                    $materialized = iterator_to_array($actions, false);
-                    $seenGenerators[$actions] = $materialized;
-                    return $materialized;
-                }
-
-                // For arrays or other iterables, just return as-is
-                return $actions;
-            };
-        }
-        return new Rule($name, $when, $then);
-    }
-
-    // Legacy signature: rule(name, callback)
-    if ($callback !== null) {
-        // Also wrap legacy callbacks to handle generators
+    // If $then is already iterable (Generator, array), materialize it to array
+    // so it can be reused across multiple messages (generators are not rewindable)
+    if (!$then instanceof \Closure) {
+        $actions = is_array($then) ? $then : iterator_to_array($then, false);
+        $then = static fn (): array => $actions;
+    } else {
+        // Wrap closure to detect reused generators
         /** @var \WeakMap<\Generator, list<Action>> $seenGenerators */
         $seenGenerators = new \WeakMap();
+        $originalThen = $then;
         /**
          * @param Message $message
          * @return iterable<Action>
          */
-        $wrappedCallback = static function (Message $message) use ($seenGenerators, $callback): iterable {
-            $actions = $callback($message);
+        $then = static function (Message $message) use ($seenGenerators, $originalThen): iterable {
+            $actions = $originalThen($message);
 
+            // If it's a Generator, check if we've seen it before
             if ($actions instanceof \Generator) {
+                // If this generator instance was returned before, it means the closure
+                // is reusing the same generator object (a bug). Materialize to array.
                 if (isset($seenGenerators[$actions])) {
                     return $seenGenerators[$actions];
                 }
 
+                // First time seeing this generator, materialize and cache it
                 $materialized = iterator_to_array($actions, false);
                 $seenGenerators[$actions] = $materialized;
                 return $materialized;
             }
 
+            // For arrays or other iterables, just return as-is
             return $actions;
         };
-        return new Rule($name, null, $wrappedCallback);
     }
 
-    throw new \InvalidArgumentException(
-        'rule() requires either callback parameter or both when and then parameters'
-    );
+    return new Rule($name, $when, $then);
 }
 
 /**

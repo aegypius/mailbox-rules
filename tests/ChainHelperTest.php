@@ -28,29 +28,29 @@ final class ChainHelperTest extends TestCase
 
     public function testChainYieldsAllActionsInOrder(): void
     {
-        $action1 = new LogAction();
-        $action2 = new MarkAsRead();
-        $action3 = new MoveToFolder('Archive');
+        $logAction = new LogAction();
+        $markAsRead = new MarkAsRead();
+        $moveToFolder = new MoveToFolder('Archive');
 
-        $result = chain($action1, $action2, $action3);
+        $result = chain($logAction, $markAsRead, $moveToFolder);
 
         $actions = iterator_to_array($result);
 
         self::assertCount(3, $actions);
-        self::assertSame($action1, $actions[0]);
-        self::assertSame($action2, $actions[1]);
-        self::assertSame($action3, $actions[2]);
+        self::assertSame($logAction, $actions[0]);
+        self::assertSame($markAsRead, $actions[1]);
+        self::assertSame($moveToFolder, $actions[2]);
     }
 
     public function testChainWithSingleAction(): void
     {
-        $action = new LogAction();
-        $result = chain($action);
+        $logAction = new LogAction();
+        $result = chain($logAction);
 
         $actions = iterator_to_array($result);
 
         self::assertCount(1, $actions);
-        self::assertSame($action, $actions[0]);
+        self::assertSame($logAction, $actions[0]);
     }
 
     public function testChainWithNoActions(): void

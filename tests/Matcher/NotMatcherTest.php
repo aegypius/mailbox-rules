@@ -37,9 +37,7 @@ final class NotMatcherTest extends TestCase
     {
         $message = $this->createStub(Message::class);
 
-        $innerMatcher = $this->createMatcherThatChecks(function (): bool {
-            return true;
-        });
+        $innerMatcher = $this->createMatcherThatChecks(fn (): bool => true);
 
         $notMatcher = new NotMatcher($innerMatcher);
 
@@ -50,9 +48,7 @@ final class NotMatcherTest extends TestCase
     {
         $message = $this->createStub(Message::class);
 
-        $innerMatcher = $this->createMatcherThatChecks(function (): bool {
-            return false;
-        });
+        $innerMatcher = $this->createMatcherThatChecks(fn (): bool => false);
 
         $notMatcher = new NotMatcher($innerMatcher);
 
@@ -73,26 +69,22 @@ final class NotMatcherTest extends TestCase
     {
         $message = $this->createMessageFrom('user@example.com');
 
-        $fromMatcher = $this->createMatcherThatChecks(function (Message $msg): bool {
-            return $msg->from()?->email() === 'user@example.com';
-        });
+        $fromMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->from()?->email() === 'user@example.com');
 
-        $notFromMatcher = new NotMatcher($fromMatcher);
+        $notMatcher = new NotMatcher($fromMatcher);
 
-        $this->assertFalse($notFromMatcher->matches($message));
+        $this->assertFalse($notMatcher->matches($message));
     }
 
     public function testIntegrationWithFromMatcherNegative(): void
     {
         $message = $this->createMessageFrom('other@example.com');
 
-        $fromMatcher = $this->createMatcherThatChecks(function (Message $msg): bool {
-            return $msg->from()?->email() === 'user@example.com';
-        });
+        $fromMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->from()?->email() === 'user@example.com');
 
-        $notFromMatcher = new NotMatcher($fromMatcher);
+        $notMatcher = new NotMatcher($fromMatcher);
 
-        $this->assertTrue($notFromMatcher->matches($message));
+        $this->assertTrue($notMatcher->matches($message));
     }
 
     private function createMatcherThatReturns(bool $result): Matcher

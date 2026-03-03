@@ -26,17 +26,10 @@ final readonly class ToMatcher implements Matcher
         $recipients = $message->to();
 
         // No recipients
-        if (empty($recipients)) {
+        if ($recipients === []) {
             return false;
         }
 
-        // Check if any recipient matches the pattern
-        foreach ($recipients as $recipient) {
-            if ($this->patternMatcher->matches($recipient->email())) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($recipients, fn ($recipient): bool => $this->patternMatcher->matches($recipient->email()));
     }
 }
