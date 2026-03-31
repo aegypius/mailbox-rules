@@ -6,6 +6,7 @@ namespace MailboxRules\Console;
 
 use MailboxRules\Loader\RuleFileLoader;
 use MailboxRules\MailboxFactory;
+use MailboxRules\MailboxFactoryInterface;
 use MailboxRules\Service\MailboxProcessor;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
@@ -23,11 +24,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 final class ApplyCommand extends Command
 {
     private readonly RuleFileLoader $ruleFileLoader;
+    private readonly MailboxFactoryInterface $mailboxFactory;
 
-    public function __construct(RuleFileLoader|null $ruleFileLoader = null)
-    {
+    public function __construct(
+        RuleFileLoader|null $ruleFileLoader = null,
+        MailboxFactoryInterface|null $mailboxFactory = null,
+    ) {
         parent::__construct();
         $this->ruleFileLoader = $ruleFileLoader ?? new RuleFileLoader();
+        $this->mailboxFactory = $mailboxFactory ?? new MailboxFactory();
     }
 
     protected function configure(): void
@@ -73,7 +78,7 @@ final class ApplyCommand extends Command
         );
 
         // Create processor with shared logger and factory
-        $processor = new MailboxProcessor(new MailboxFactory(), $logger);
+        $processor = new MailboxProcessor($this->mailboxFactory, $logger);
 
         if ($input->getOption("dry-run")) {
             $hasResults = false;

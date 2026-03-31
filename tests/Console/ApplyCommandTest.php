@@ -10,6 +10,10 @@ use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\Message;
 use DirectoryTree\ImapEngine\MessageQuery;
 use MailboxRules\Console\ApplyCommand;
+use MailboxRules\Loader\RuleFileLoader;
+use MailboxRules\MailboxFactoryInterface;
+use MailboxRules\ValueObject\Dsn;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -18,9 +22,11 @@ use function sys_get_temp_dir;
 use function unlink;
 
 #[CoversClass(ApplyCommand::class)]
+#[AllowMockObjectsWithoutExpectations]
 class ApplyCommandTest extends TestCase
 {
     private string $tempFile = '';
+    public static Mailbox $mockMailbox;
 
     protected function tearDown(): void
     {
@@ -31,8 +37,9 @@ class ApplyCommandTest extends TestCase
 
     /**
      * @param list<Message> $messages
+     * @return array{tempFile: string, command: ApplyCommand}
      */
-    private function createTempRulesFile(array $messages): string
+    private function createTempRulesFileAndCommand(array $messages): array
     {
         $mailbox = $this->createMock(Mailbox::class);
         $folder = $this->createMock(Folder::class);
@@ -45,37 +52,53 @@ class ApplyCommandTest extends TestCase
         $query->expects($this->once())->method('limit')->with(10)->willReturn($query);
         $query->expects($this->once())->method('get')->willReturn(new MessageCollection($messages));
 
-        $hash = spl_object_hash($mailbox);
-        $GLOBALS['mailbox_' . $hash] = $mailbox;
-
         $tempFile = tempnam(sys_get_temp_dir(), 'rules_') . '.php';
         file_put_contents(
             $tempFile,
-            <<<PHP
+            <<<'PHP'
 <?php
 use MailboxRules\Action\MoveToFolder;
 use MailboxRules\Model\Rule;
-use MailboxRules\Model\Rules;
+use MailboxRules\ValueObject\Dsn;
+use MailboxRules\ValueObject\MailboxConfiguration;
 
-\$mailbox = \$GLOBALS['mailbox_{$hash}'];
-\$rule = new Rule(
+$rule = new Rule(
     name: 'Test Rule',
     matcher: null,
     then: static fn () => yield new MoveToFolder('Archive')
 );
 
-return new Rules(\$mailbox, [\$rule]);
+return new MailboxConfiguration(
+    dsn: Dsn::fromString('imap://user:pass@localhost:993/INBOX'),
+    rules: [$rule]
+);
 PHP
         );
 
-        return $tempFile;
+        // Store mock mailbox in static property for factory to return
+        self::$mockMailbox = $mailbox;
+
+        // Create anonymous class that implements the interface
+        $factoryInstance = new class() implements MailboxFactoryInterface {
+            public static function createMailbox(Dsn $dsn): Mailbox
+            {
+                return ApplyCommandTest::$mockMailbox;
+            }
+        };
+
+        // Create command with mock factory instance
+        $command = new ApplyCommand(new RuleFileLoader(), $factoryInstance);
+
+        return [
+            'tempFile' => $tempFile,
+            'command' => $command,
+        ];
     }
 
     public function testDryRunDisplaysNoActionsWhenNoMessages(): void
     {
-        $this->tempFile = $this->createTempRulesFile([]);
+        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand([]);
 
-        $applyCommand = new ApplyCommand();
         $commandTester = new CommandTester($applyCommand);
 
         $commandTester->execute([
@@ -92,9 +115,8 @@ PHP
         $message = $this->createStub(Message::class);
         $message->method('subject')->willReturn('Test Subject');
 
-        $this->tempFile = $this->createTempRulesFile([$message]);
+        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand([$message]);
 
-        $applyCommand = new ApplyCommand();
         $commandTester = new CommandTester($applyCommand);
 
         $commandTester->execute([
@@ -115,9 +137,8 @@ PHP
         $message = $this->createStub(Message::class);
         $message->method('subject')->willReturn(null);
 
-        $this->tempFile = $this->createTempRulesFile([$message]);
+        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand([$message]);
 
-        $applyCommand = new ApplyCommand();
         $commandTester = new CommandTester($applyCommand);
 
         $commandTester->execute([

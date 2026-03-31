@@ -7,7 +7,7 @@ namespace MailboxRules;
 use DirectoryTree\ImapEngine\Mailbox;
 use MailboxRules\ValueObject\Dsn;
 
-final readonly class MailboxFactory
+final readonly class MailboxFactory implements MailboxFactoryInterface
 {
     public static function createMailbox(Dsn $dsn): Mailbox
     {

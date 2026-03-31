@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MailboxRules\Service;
 
 use MailboxRules\MailboxFactory;
+use MailboxRules\MailboxFactoryInterface;
 use MailboxRules\Model\Rules;
 use MailboxRules\ValueObject\MailboxConfiguration;
 use Psr\Log\LoggerInterface;
@@ -18,10 +19,13 @@ use Psr\Log\NullLogger;
  */
 final readonly class MailboxProcessor
 {
+    private readonly MailboxFactoryInterface $mailboxFactory;
+
     public function __construct(
-        private MailboxFactory $mailboxFactory,
+        MailboxFactoryInterface|null $mailboxFactory = null,
         private LoggerInterface $logger = new NullLogger(),
     ) {
+        $this->mailboxFactory = $mailboxFactory ?? new MailboxFactory();
     }
 
     /**
@@ -37,7 +41,7 @@ final readonly class MailboxProcessor
             ]);
         }
 
-        $mailbox = $this->mailboxFactory->createMailbox($config->dsn);
+        $mailbox = $this->mailboxFactory::createMailbox($config->dsn);
         $rules = new Rules($mailbox, $config->rules, $this->logger);
         $rules->apply();
     }
@@ -56,7 +60,7 @@ final readonly class MailboxProcessor
             ]);
         }
 
-        $mailbox = $this->mailboxFactory->createMailbox($config->dsn);
+        $mailbox = $this->mailboxFactory::createMailbox($config->dsn);
         $rules = new Rules($mailbox, $config->rules, $this->logger);
         return $rules->preview();
     }

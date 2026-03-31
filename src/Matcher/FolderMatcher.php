@@ -15,7 +15,7 @@ final readonly class FolderMatcher implements Matcher
 {
     private PatternMatcher $patternMatcher;
 
-    public function __construct(string $pattern)
+    public function __construct(public string $pattern)
     {
         $this->patternMatcher = new PatternMatcher($pattern);
     }

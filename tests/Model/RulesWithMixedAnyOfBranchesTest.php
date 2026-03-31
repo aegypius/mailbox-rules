@@ -55,7 +55,7 @@ final class RulesWithMixedAnyOfBranchesTest extends TestCase
             ),
             // Branch 2: No folder matcher → should query INBOX
             new AllOfMatcher(
-                new FromMatcher('***REMOVED***'),
+                new FromMatcher('noreply@example.com'),
                 new SubjectMatcher('Login Code'),
                 new ReceivedBeforeMatcher('-2 hours')
             ),

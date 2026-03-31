@@ -1,9 +1,10 @@
 {
-    "$schema": "https://docs.dagger.io/reference/dagger.schema.json",
-    "name": "php-project",
-    "engineVersion": "v0.18.4",
-    "sdk": {
-        "source": "php"
-    },
-    "source": ".dagger"
+  "$schema": "https://docs.dagger.io/reference/dagger.schema.json",
+  "name": "php-project",
+  "engineVersion": "v0.20.3",
+  "sdk": {
+    "source": "php"
+  },
+  "source": ".dagger",
+  "disableDefaultFunctionCaching": true
 }

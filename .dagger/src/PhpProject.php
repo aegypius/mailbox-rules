@@ -38,6 +38,7 @@ class PhpProject
                 "install",
                 "--prefer-dist",
                 "--no-interaction",
+                "--ignore-platform-req=ext-xdebug",
             ])
             ->directory("/app/vendor");
     }
@@ -50,7 +51,7 @@ class PhpProject
     ): Container {
         return dag()
             ->container()
-            ->from("php:8.3-cli")
+            ->from("php:8.5-cli")
             ->withMountedDirectory("/app", $directory)
             ->withDirectory("/app/vendor", $this->vendors($directory))
             ->withWorkdir("/app")
@@ -76,7 +77,7 @@ class PhpProject
 
         return dag()
             ->container()
-            ->from("php:8.3-cli")
+            ->from("php:8.5-cli")
             ->withMountedDirectory("/app", $directory)
             ->withDirectory("/app/vendor", $this->vendors($directory))
             ->withWorkdir("/app")
