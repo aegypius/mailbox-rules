@@ -26,37 +26,24 @@ use MailboxRules\Matcher\SmallerThanMatcher;
 use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Matcher\ToMatcher;
 use MailboxRules\Model\Rule;
-use MailboxRules\Model\Rules;
 use MailboxRules\ValueObject\Dsn;
-use Monolog\Handler\StreamHandler;
-use Monolog\Level;
-use Monolog\Logger;
-use Monolog\Processor\PsrLogMessageProcessor;
+use MailboxRules\ValueObject\MailboxConfiguration;
 
 /**
- * Create a mailbox with rules.
+ * Create a mailbox configuration with rules.
  *
  * @param string|Dsn $dsn The DSN string or Dsn object.
  * @param iterable<Rule> $rules A list of rules to apply.
- * @return Rules The created Rules object.
+ * @param string|null $name Optional name for logging/identification.
+ * @return MailboxConfiguration The created mailbox configuration.
  */
-function mailbox(string|Dsn $dsn, iterable $rules): Rules
+function mailbox(string|Dsn $dsn, iterable $rules, ?string $name = null): MailboxConfiguration
 {
     if (is_string($dsn)) {
         $dsn = Dsn::fromString($dsn);
     }
 
-    $logger = new Logger(
-        name: "app",
-        handlers: [new StreamHandler("php://stdout", Level::Info)],
-        processors: [new PsrLogMessageProcessor(dateFormat: "Y-m-d H:i:s")]
-    );
-
-    return new Rules(
-        mailbox: MailboxFactory::createMailbox($dsn),
-        rules: $rules,
-        logger: $logger
-    );
+    return new MailboxConfiguration($dsn, $rules, $name);
 }
 
 /**
@@ -402,4 +389,25 @@ function body(string $pattern): Matcher
 function folder(string $pattern): Matcher
 {
     return new FolderMatcher($pattern);
+}
+
+/**
+ * Create multiple mailbox configurations.
+ *
+ * Useful for processing multiple email accounts in a single configuration file.
+ *
+ * Example:
+ * ```php
+ * return mailboxes(
+ *     mailbox(env('WORK_DSN'), [...]),
+ *     mailbox(env('PERSONAL_DSN'), [...]),
+ * );
+ * ```
+ *
+ * @param MailboxConfiguration ...$configurations One or more mailbox configurations
+ * @return array<MailboxConfiguration> Array of mailbox configurations
+ */
+function mailboxes(MailboxConfiguration ...$configurations): array
+{
+    return $configurations;
 }

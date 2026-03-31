@@ -5,6 +5,13 @@ declare(strict_types=1);
 namespace MailboxRules\Console;
 
 use MailboxRules\Loader\RuleFileLoader;
+use MailboxRules\MailboxFactory;
+use MailboxRules\Service\MailboxProcessor;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Level;
+use Monolog\Logger;
+use Monolog\Processor\PsrLogMessageProcessor;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -48,37 +55,70 @@ final class ApplyCommand extends Command
         $config = $input->getArgument("config");
         assert(is_string($config));
 
-        $rules = $this->ruleFileLoader->load($config);
+        $configurations = $this->ruleFileLoader->load($config);
+
+        // Create shared logger
+        $handler = new StreamHandler("php://stdout", Level::Info);
+        $handler->setFormatter(new LineFormatter(
+            format: "%datetime% [%level_name%] %message% %context% %extra%\n",
+            dateFormat: "Y-m-d H:i:s",
+            allowInlineLineBreaks: true,
+            ignoreEmptyContextAndExtra: true
+        ));
+
+        $logger = new Logger(
+            name: "app",
+            handlers: [$handler],
+            processors: [new PsrLogMessageProcessor(dateFormat: "Y-m-d H:i:s")]
+        );
+
+        // Create processor with shared logger and factory
+        $processor = new MailboxProcessor(new MailboxFactory(), $logger);
 
         if ($input->getOption("dry-run")) {
-            $results = $rules->preview();
+            $hasResults = false;
 
-            if ($results === []) {
-                $output->writeln("<info>No actions to execute</info>");
-                return Command::SUCCESS;
-            }
+            foreach ($configurations as $mailboxConfig) {
+                $results = $processor->preview($mailboxConfig);
 
-            foreach ($results as $result) {
-                $output->writeln(sprintf(
-                    "<comment>Rule:</comment> %s",
-                    $result->ruleName
-                ));
-                $output->writeln(sprintf(
-                    "<comment>Message:</comment> %s",
-                    $result->message->subject() ?? '(no subject)'
-                ));
-                $output->writeln("<comment>Actions:</comment>");
-                foreach ($result->actions as $action) {
-                    $output->writeln(sprintf("  - %s", $action::class));
+                if ($results === []) {
+                    continue;
                 }
 
-                $output->writeln("");
+                $hasResults = true;
+
+                if ($mailboxConfig->name !== null) {
+                    $output->writeln(sprintf("<info>Mailbox: %s</info>", $mailboxConfig->name));
+                }
+
+                foreach ($results as $result) {
+                    $output->writeln(sprintf(
+                        "<comment>Rule:</comment> %s",
+                        $result->ruleName
+                    ));
+                    $output->writeln(sprintf(
+                        "<comment>Message:</comment> %s",
+                        $result->message->subject() ?? '(no subject)'
+                    ));
+                    $output->writeln("<comment>Actions:</comment>");
+                    foreach ($result->actions as $action) {
+                        $output->writeln(sprintf("  - %s", $action::class));
+                    }
+
+                    $output->writeln("");
+                }
+            }
+
+            if (!$hasResults) {
+                $output->writeln("<info>No actions to execute</info>");
             }
 
             return Command::SUCCESS;
         }
 
-        $rules->apply();
+        foreach ($configurations as $mailboxConfig) {
+            $processor->process($mailboxConfig);
+        }
 
         return Command::SUCCESS;
     }
