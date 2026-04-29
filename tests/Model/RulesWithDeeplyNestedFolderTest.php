@@ -16,13 +16,11 @@ use MailboxRules\Matcher\FolderMatcher;
 use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Rules::class)]
-#[AllowMockObjectsWithoutExpectations]
 final class RulesWithDeeplyNestedFolderTest extends TestCase
 {
     #[Test]

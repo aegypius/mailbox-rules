@@ -167,7 +167,7 @@ final readonly class Rules
      *
      * @return list<PreviewResult> List of preview results showing messages, rules, and actions
      */
-    public function preview(): array
+    public function preview(int $limit = 10): array
     {
         $this->mailbox->connect();
 
@@ -179,7 +179,7 @@ final readonly class Rules
             // Decode the special inbox key
             $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
 
-            // Get folder and messages (limit 10 per folder)
+            // Get folder and messages
             $folder = $actualPath === null
                 ? $this->mailbox->inbox()
                 : $this->mailbox->folders()->find($actualPath);
@@ -188,7 +188,11 @@ final readonly class Rules
                 continue;
             }
 
-            $messageQuery = $folder->messages()->withHeaders()->limit(10);
+            $messageQuery = $folder->messages()->withHeaders();
+
+            if ($limit > 0) {
+                $messageQuery = $messageQuery->limit($limit);
+            }
 
             foreach ($messageQuery->get() as $message) {
                 assert($message instanceof Message);

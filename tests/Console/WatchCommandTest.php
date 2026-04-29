@@ -10,7 +10,6 @@ use MailboxRules\Console\ApplyCommand;
 use MailboxRules\Loader\RuleFileLoader;
 use MailboxRules\MailboxFactoryInterface;
 use MailboxRules\ValueObject\Dsn;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -20,7 +19,6 @@ use function tempnam;
 use function unlink;
 
 #[CoversClass(ApplyCommand::class)]
-#[AllowMockObjectsWithoutExpectations]
 final class WatchCommandTest extends TestCase
 {
     private string $tempFile = '';

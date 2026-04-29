@@ -52,7 +52,7 @@ final readonly class MailboxProcessor
      * @param MailboxConfiguration $config The mailbox configuration to preview
      * @return list<\MailboxRules\Model\PreviewResult> List of preview results
      */
-    public function preview(MailboxConfiguration $config): array
+    public function preview(MailboxConfiguration $config, int $limit = 10): array
     {
         if ($config->name !== null) {
             $this->logger->info('Previewing mailbox: {mailbox}', [
@@ -62,6 +62,6 @@ final readonly class MailboxProcessor
 
         $mailbox = $this->mailboxFactory::createMailbox($config->dsn);
         $rules = new Rules($mailbox, $config->rules, $this->logger);
-        return $rules->preview();
+        return $rules->preview($limit);
     }
 }

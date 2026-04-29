@@ -59,6 +59,13 @@ final class ApplyCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 "Watch mailbox for new messages and apply rules in real-time (IMAP IDLE)"
+            )
+            ->addOption(
+                "preview-limit",
+                null,
+                InputOption::VALUE_REQUIRED,
+                "Maximum number of messages to preview per folder (0 = all)",
+                "10"
             );
     }
 
@@ -106,9 +113,11 @@ final class ApplyCommand extends Command
 
         if ($input->getOption("dry-run")) {
             $hasResults = false;
+            $rawLimit = $input->getOption("preview-limit");
+            $previewLimit = is_numeric($rawLimit) ? (int) $rawLimit : 10;
 
             foreach ($configurations as $mailboxConfig) {
-                $results = $processor->preview($mailboxConfig);
+                $results = $processor->preview($mailboxConfig, $previewLimit);
 
                 if ($results === []) {
                     continue;

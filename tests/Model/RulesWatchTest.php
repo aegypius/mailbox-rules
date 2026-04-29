@@ -15,13 +15,11 @@ use MailboxRules\Matcher\FolderMatcher;
 use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Rules::class)]
-#[AllowMockObjectsWithoutExpectations]
 final class RulesWatchTest extends TestCase
 {
     #[Test]
@@ -113,11 +111,10 @@ final class RulesWatchTest extends TestCase
             }
         );
 
-        $mailbox = $this->createMock(Mailbox::class);
+        $mailbox = $this->createStub(Mailbox::class);
         $inbox = $this->createMock(Folder::class);
-        $message = $this->createMock(Message::class);
+        $message = $this->createStub(Message::class);
 
-        $mailbox->method('connect');
         $mailbox->method('inbox')->willReturn($inbox);
 
         // Capture the callable passed to idle() and invoke it immediately with a message
