@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
+use Symfony\Contracts\Service\ResetInterface;
+
 /**
  * Utility class for pattern matching against strings.
  *
@@ -15,13 +17,18 @@ namespace MailboxRules\Matcher;
  * Used internally by matchers that need to compare email addresses,
  * subjects, or other message fields against patterns.
  */
-final readonly class PatternMatcher
+final class PatternMatcher implements ResetInterface
 {
-    private string $regex;
+    /**
+     * @var array<string, string>
+     */
+    private static array $cache = [];
+
+    private readonly string $regex;
 
     public function __construct(string $pattern)
     {
-        $this->regex = $this->compilePattern($pattern);
+        $this->regex = self::$cache[$pattern] ??= $this->compilePattern($pattern);
     }
 
     /**
@@ -33,6 +40,20 @@ final readonly class PatternMatcher
     public function matches(string $value): bool
     {
         return (bool) preg_match($this->regex, $value);
+    }
+
+    public function reset(): void
+    {
+        self::$cache = [];
+    }
+
+    /**
+     * Return the number of cached compiled patterns.
+     * Intended for use in tests only.
+     */
+    public static function getCacheSize(): int
+    {
+        return count(self::$cache);
     }
 
     /**
