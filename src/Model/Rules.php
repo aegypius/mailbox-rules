@@ -24,35 +24,6 @@ final readonly class Rules
     ) {
     }
 
-    private function doApply(Message $message): void
-    {
-        foreach ($this->rules as $rule) {
-            try {
-                $actions = $rule($message);
-
-                // Materialize generator into array to avoid "already closed generator" error
-                // when actions modify the message (e.g., move/delete)
-                $actionsList = is_array($actions) ? $actions : iterator_to_array($actions, false);
-
-                foreach ($actionsList as $actionList) {
-                    // Cast to callable for PHPStan - all Actions implement __invoke
-                    /** @var callable $callableAction */
-                    $callableAction = $actionList;
-                    Callback::createFor($callableAction)->invokeAll(
-                        Parameter::union(...$this->useParameters($message))
-                    );
-                }
-            } catch (\Exception $e) {
-                if (str_contains($e->getMessage(), 'closed generator')) {
-                    $this->logger->warning(sprintf("Skipping rule '%s' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.", $rule->name));
-                    continue;
-                }
-
-                throw $e;
-            }
-        }
-    }
-
     /**
      * @return list<Parameter>
      */
@@ -165,7 +136,28 @@ final readonly class Rules
 
     public function watch(): void
     {
-        $this->mailbox->inbox()->idle($this->doApply(...));
+        $this->mailbox->connect();
+
+        $rulesByFolder = $this->groupRulesByFolder();
+
+        foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
+            $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
+
+            $folder = $actualPath === null
+                ? $this->mailbox->inbox()
+                : $this->mailbox->folders()->find($actualPath);
+
+            if ($folder === null) {
+                $this->logger->warning('Folder not found: {folder}, skipping watch', [
+                    'folder' => $actualPath,
+                ]);
+                continue;
+            }
+
+            $folder->idle(function (Message $message) use ($rulesForFolder): void {
+                $this->doApplyRules($message, $rulesForFolder);
+            });
+        }
     }
 
     /**
