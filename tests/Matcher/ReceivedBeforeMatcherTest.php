@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Matcher;
 
 use Carbon\Carbon;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\ReceivedBeforeMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -18,7 +18,7 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $cutoff = Carbon::parse('2024-01-15 12:00:00');
         $messageDate = Carbon::parse('2024-01-14 10:00:00');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('date')->willReturn($messageDate);
 
         $receivedBeforeMatcher = new ReceivedBeforeMatcher($cutoff);
@@ -31,7 +31,7 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $cutoff = Carbon::parse('2024-01-15 12:00:00');
         $messageDate = Carbon::parse('2024-01-16 10:00:00');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('date')->willReturn($messageDate);
 
         $receivedBeforeMatcher = new ReceivedBeforeMatcher($cutoff);
@@ -44,7 +44,7 @@ final class ReceivedBeforeMatcherTest extends TestCase
         $cutoff = Carbon::parse('2024-01-15 12:00:00');
         $messageDate = Carbon::parse('2024-01-15 12:00:00');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('date')->willReturn($messageDate);
 
         $receivedBeforeMatcher = new ReceivedBeforeMatcher($cutoff);
@@ -56,7 +56,7 @@ final class ReceivedBeforeMatcherTest extends TestCase
     {
         $cutoff = Carbon::parse('2024-01-15 12:00:00');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('date')->willReturn(null);
 
         $receivedBeforeMatcher = new ReceivedBeforeMatcher($cutoff);
@@ -68,7 +68,7 @@ final class ReceivedBeforeMatcherTest extends TestCase
     {
         $messageDate = Carbon::parse('2024-01-14 10:00:00');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('date')->willReturn($messageDate);
 
         $receivedBeforeMatcher = new ReceivedBeforeMatcher('2024-01-15 12:00:00');
@@ -80,7 +80,7 @@ final class ReceivedBeforeMatcherTest extends TestCase
     {
         $messageDate = Carbon::now()->subHours(4);
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('date')->willReturn($messageDate);
 
         $receivedBeforeMatcher = new ReceivedBeforeMatcher('3 hours ago');
@@ -92,7 +92,7 @@ final class ReceivedBeforeMatcherTest extends TestCase
     {
         $messageDate = Carbon::now()->subHours(2);
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('date')->willReturn($messageDate);
 
         $receivedBeforeMatcher = new ReceivedBeforeMatcher('3 hours ago');

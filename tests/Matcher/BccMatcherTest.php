@@ -3,7 +3,7 @@
 namespace Tests\Matcher;
 
 use DirectoryTree\ImapEngine\Address;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\BccMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -23,7 +23,7 @@ final class BccMatcherTest extends TestCase
     {
         $address = $this->createAddress('bcc@example.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('bcc')->willReturn([$address]);
 
         $bccMatcher = new BccMatcher('bcc@example.com');
@@ -35,7 +35,7 @@ final class BccMatcherTest extends TestCase
     {
         $address = $this->createAddress('user@example.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('bcc')->willReturn([$address]);
 
         $bccMatcher = new BccMatcher('*@example.com');
@@ -48,7 +48,7 @@ final class BccMatcherTest extends TestCase
         $address = $this->createAddress('first@example.com');
         $bcc2 = $this->createAddress('second@other.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('bcc')->willReturn([$address, $bcc2]);
 
         $bccMatcher = new BccMatcher('*@other.com');
@@ -60,7 +60,7 @@ final class BccMatcherTest extends TestCase
     {
         $address = $this->createAddress('user@example.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('bcc')->willReturn([$address]);
 
         $bccMatcher = new BccMatcher('*@other.com');
@@ -70,7 +70,7 @@ final class BccMatcherTest extends TestCase
 
     public function testReturnsFalseForNoBccRecipients(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('bcc')->willReturn([]);
 
         $bccMatcher = new BccMatcher('user@example.com');

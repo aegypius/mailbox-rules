@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action\LogAction;
 use MailboxRules\Action\MarkAsRead;
 use MailboxRules\Action\MoveToFolder;
@@ -47,7 +47,7 @@ final class RuleHelperTest extends TestCase
             )
         );
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $actions = iterator_to_array($rule($message));
 
         self::assertCount(3, $actions);
@@ -69,7 +69,7 @@ final class RuleHelperTest extends TestCase
             ]
         );
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $actions = iterator_to_array($rule($message));
 
         self::assertCount(2, $actions);

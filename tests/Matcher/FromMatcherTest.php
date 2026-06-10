@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Matcher;
 
 use DirectoryTree\ImapEngine\Address;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\FromMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -80,7 +80,7 @@ final class FromMatcherTest extends TestCase
     public function it_returns_false_when_from_is_null(): void
     {
         $fromMatcher = new FromMatcher('test@example.com');
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('from')->willReturn(null);
 
         $this->assertFalse($fromMatcher->matches($message));
@@ -113,9 +113,9 @@ final class FromMatcherTest extends TestCase
         ];
     }
 
-    private function createMessageWithFrom(string $email): Message
+    private function createMessageWithFrom(string $email): MessageInterface
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $address = $this->createStub(Address::class);
         $address->method('email')->willReturn($email);
         $message->method('from')->willReturn($address);

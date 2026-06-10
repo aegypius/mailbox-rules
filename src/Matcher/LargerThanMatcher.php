@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matcher that matches messages larger than a specific size.
@@ -21,7 +21,7 @@ final readonly class LargerThanMatcher implements Matcher
         $this->bytes = is_int($size) ? $size : $this->parseSize($size);
     }
 
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
         $messageSize = $message->size();
 

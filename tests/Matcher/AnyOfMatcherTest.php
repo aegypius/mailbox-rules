@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Matcher;
 
 use DirectoryTree\ImapEngine\Address;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AnyOfMatcher;
 use MailboxRules\Matcher\Matcher;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -23,7 +23,7 @@ final class AnyOfMatcherTest extends TestCase
         $matcher3 = $this->createMatcherThatReturns(true);
 
         $anyOfMatcher = new AnyOfMatcher($matcher1, $matcher2, $matcher3);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         $this->assertTrue($anyOfMatcher->matches($message));
     }
@@ -36,7 +36,7 @@ final class AnyOfMatcherTest extends TestCase
         $matcher3 = $this->createMatcherThatReturns(false);
 
         $anyOfMatcher = new AnyOfMatcher($matcher1, $matcher2, $matcher3);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         $this->assertTrue($anyOfMatcher->matches($message));
     }
@@ -49,7 +49,7 @@ final class AnyOfMatcherTest extends TestCase
         $matcher3 = $this->createMatcherThatReturns(false);
 
         $anyOfMatcher = new AnyOfMatcher($matcher1, $matcher2, $matcher3);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         $this->assertFalse($anyOfMatcher->matches($message));
     }
@@ -60,7 +60,7 @@ final class AnyOfMatcherTest extends TestCase
         $matcher = $this->createMatcherThatReturns(true);
 
         $anyOfMatcher = new AnyOfMatcher($matcher);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         $this->assertTrue($anyOfMatcher->matches($message));
     }
@@ -71,7 +71,7 @@ final class AnyOfMatcherTest extends TestCase
         $matcher = $this->createMatcherThatReturns(false);
 
         $anyOfMatcher = new AnyOfMatcher($matcher);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         $this->assertFalse($anyOfMatcher->matches($message));
     }
@@ -85,7 +85,7 @@ final class AnyOfMatcherTest extends TestCase
         $matcher3->expects($this->never())->method('matches');
 
         $anyOfMatcher = new AnyOfMatcher($matcher1, $matcher2, $matcher3);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         $this->assertTrue($anyOfMatcher->matches($message));
     }
@@ -99,14 +99,14 @@ final class AnyOfMatcherTest extends TestCase
         $toAddress = $this->createStub(Address::class);
         $toAddress->method('email')->willReturn('recipient@example.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('from')->willReturn($fromAddress);
         $message->method('to')->willReturn([$toAddress]);
         $message->method('subject')->willReturn('Regular Update');
 
-        $fromMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->from()?->email() === 'sender@example.com');
-        $toMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->to() !== [] && $message->to()[0]->email() === 'recipient@example.com');
-        $subjectMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->subject() === 'Important Meeting');
+        $fromMatcher = $this->createMatcherThatChecks(fn (MessageInterface $message): bool => $message->from()?->email() === 'sender@example.com');
+        $toMatcher = $this->createMatcherThatChecks(fn (MessageInterface $message): bool => $message->to() !== [] && $message->to()[0]->email() === 'recipient@example.com');
+        $subjectMatcher = $this->createMatcherThatChecks(fn (MessageInterface $message): bool => $message->subject() === 'Important Meeting');
 
         $anyOfMatcher = new AnyOfMatcher($fromMatcher, $toMatcher, $subjectMatcher);
 
@@ -122,14 +122,14 @@ final class AnyOfMatcherTest extends TestCase
         $toAddress = $this->createStub(Address::class);
         $toAddress->method('email')->willReturn('other-recipient@example.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('from')->willReturn($fromAddress);
         $message->method('to')->willReturn([$toAddress]);
         $message->method('subject')->willReturn('Regular Update');
 
-        $fromMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->from()?->email() === 'sender@example.com');
-        $toMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->to() !== [] && $message->to()[0]->email() === 'recipient@example.com');
-        $subjectMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->subject() === 'Important Meeting');
+        $fromMatcher = $this->createMatcherThatChecks(fn (MessageInterface $message): bool => $message->from()?->email() === 'sender@example.com');
+        $toMatcher = $this->createMatcherThatChecks(fn (MessageInterface $message): bool => $message->to() !== [] && $message->to()[0]->email() === 'recipient@example.com');
+        $subjectMatcher = $this->createMatcherThatChecks(fn (MessageInterface $message): bool => $message->subject() === 'Important Meeting');
 
         $anyOfMatcher = new AnyOfMatcher($fromMatcher, $toMatcher, $subjectMatcher);
 

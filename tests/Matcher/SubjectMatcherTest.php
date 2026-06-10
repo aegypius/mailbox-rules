@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\SubjectMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -140,9 +140,9 @@ final class SubjectMatcherTest extends TestCase
         ];
     }
 
-    private function createMessageWithSubject(string $subject): Message
+    private function createMessageWithSubject(string $subject): MessageInterface
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('subject')->willReturn($subject);
 
         return $message;

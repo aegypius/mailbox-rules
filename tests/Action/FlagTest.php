@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Action;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action\Flag;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +14,7 @@ final class FlagTest extends TestCase
 {
     public function testMarksFlaggedFlag(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('markFlagged');
 
@@ -25,7 +25,7 @@ final class FlagTest extends TestCase
     public function testMarksFlaggedWithoutExpungeByDefault(): void
     {
         // markFlagged doesn't have expunge parameter, just verify it's called
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('markFlagged');
 

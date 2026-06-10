@@ -3,7 +3,7 @@
 namespace Tests\Matcher;
 
 use DirectoryTree\ImapEngine\Address;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\CcMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -23,7 +23,7 @@ final class CcMatcherTest extends TestCase
     {
         $address = $this->createAddress('cc@example.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('cc')->willReturn([$address]);
 
         $ccMatcher = new CcMatcher('cc@example.com');
@@ -35,7 +35,7 @@ final class CcMatcherTest extends TestCase
     {
         $address = $this->createAddress('user@example.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('cc')->willReturn([$address]);
 
         $ccMatcher = new CcMatcher('*@example.com');
@@ -48,7 +48,7 @@ final class CcMatcherTest extends TestCase
         $address = $this->createAddress('first@example.com');
         $cc2 = $this->createAddress('second@other.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('cc')->willReturn([$address, $cc2]);
 
         $ccMatcher = new CcMatcher('*@other.com');
@@ -60,7 +60,7 @@ final class CcMatcherTest extends TestCase
     {
         $address = $this->createAddress('user@example.com');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('cc')->willReturn([$address]);
 
         $ccMatcher = new CcMatcher('*@other.com');
@@ -70,7 +70,7 @@ final class CcMatcherTest extends TestCase
 
     public function testReturnsFalseForNoCcRecipients(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('cc')->willReturn([]);
 
         $ccMatcher = new CcMatcher('user@example.com');

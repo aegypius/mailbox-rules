@@ -9,6 +9,7 @@ use DirectoryTree\ImapEngine\Folder;
 use DirectoryTree\ImapEngine\FolderRepository;
 use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use DirectoryTree\ImapEngine\MessageQuery;
 use MailboxRules\Action\LogAction;
 use MailboxRules\Matcher\AllOfMatcher;
@@ -50,7 +51,7 @@ final class RulesProgressReportingTest extends TestCase
                 $this->callback(static fn (array $ctx): bool => ($ctx['folder'] ?? null) === 'INBOX')
             );
 
-        $rule = new Rule('test', new AnyMatcher(), static fn (Message $m): iterable => yield new LogAction());
+        $rule = new Rule('test', new AnyMatcher(), static fn (MessageInterface $m): iterable => yield new LogAction());
         $rules = new Rules($mailbox, [$rule], $logger);
         $rules->apply();
     }
@@ -75,7 +76,7 @@ final class RulesProgressReportingTest extends TestCase
                 $infoCalls[] = $ctx;
             });
 
-        $rule = new Rule('test', new AnyMatcher(), static fn (Message $m): iterable => yield new LogAction());
+        $rule = new Rule('test', new AnyMatcher(), static fn (MessageInterface $m): iterable => yield new LogAction());
         $rules = new Rules($mailbox, [$rule], $logger);
         $rules->apply();
 
@@ -103,7 +104,7 @@ final class RulesProgressReportingTest extends TestCase
                 $infoCalls[] = $ctx;
             });
 
-        $rule = new Rule('My Rule', new AnyMatcher(), static fn (Message $m): iterable => yield new LogAction());
+        $rule = new Rule('My Rule', new AnyMatcher(), static fn (MessageInterface $m): iterable => yield new LogAction());
         $rules = new Rules($mailbox, [$rule], $logger);
         $rules->apply();
 
@@ -128,7 +129,7 @@ final class RulesProgressReportingTest extends TestCase
         $rule = new Rule(
             'test',
             new AllOfMatcher(new FolderMatcher('Missing')),
-            static fn (Message $m): iterable => yield new LogAction()
+            static fn (MessageInterface $m): iterable => yield new LogAction()
         );
         $rules = new Rules($mailbox, [$rule], $logger);
         $rules->apply();
@@ -151,7 +152,7 @@ final class RulesProgressReportingTest extends TestCase
                 $this->callback(static fn (array $ctx): bool => ($ctx['folder'] ?? null) === 'INBOX')
             );
 
-        $rule = new Rule('test', null, static fn (Message $m): iterable => yield new LogAction());
+        $rule = new Rule('test', null, static fn (MessageInterface $m): iterable => yield new LogAction());
         $rules = new Rules($mailbox, [$rule], $logger);
         $rules->watch();
     }

@@ -7,7 +7,7 @@ namespace Tests\Model;
 use DirectoryTree\ImapEngine\Collections\MessageCollection;
 use DirectoryTree\ImapEngine\Folder;
 use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use DirectoryTree\ImapEngine\MessageQuery;
 use MailboxRules\Action\LogAction;
 use MailboxRules\Model\Rule;
@@ -36,7 +36,7 @@ final class RulesPreviewLimitTest extends TestCase
         $rule = new Rule(
             name: 'Test',
             matcher: null,
-            then: static fn (Message $m): iterable => yield new LogAction()
+            then: static fn (MessageInterface $m): iterable => yield new LogAction()
         );
 
         $rules = new Rules($mailbox, [$rule]);
@@ -60,7 +60,7 @@ final class RulesPreviewLimitTest extends TestCase
         $rule = new Rule(
             name: 'Test',
             matcher: null,
-            then: static fn (Message $m): iterable => yield new LogAction()
+            then: static fn (MessageInterface $m): iterable => yield new LogAction()
         );
 
         $rules = new Rules($mailbox, [$rule]);
@@ -84,7 +84,7 @@ final class RulesPreviewLimitTest extends TestCase
         $rule = new Rule(
             name: 'Test',
             matcher: null,
-            then: static fn (Message $m): iterable => yield new LogAction()
+            then: static fn (MessageInterface $m): iterable => yield new LogAction()
         );
 
         $rules = new Rules($mailbox, [$rule]);

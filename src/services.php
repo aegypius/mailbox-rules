@@ -17,6 +17,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         ->load('MailboxRules\\', './')
         ->exclude([
             './Action',
+            './Adapter',
+            './Contract',
             './{functions,services}.php',
         ]);
 

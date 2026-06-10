@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action;
 use MailboxRules\Model\Rule;
 use PHPUnit\Framework\Attributes\CoversFunction;
@@ -20,7 +20,7 @@ final class RuleFunctionTest extends TestCase
     {
         $rule = rule(
             name: "Test Rule",
-            then: static fn (Message $message): iterable => []
+            then: static fn (MessageInterface $message): iterable => []
         );
 
         $this->assertInstanceOf(Rule::class, $rule);
@@ -30,7 +30,7 @@ final class RuleFunctionTest extends TestCase
     public function testRuleWithMatcherSignature(): void
     {
         $matcher = any();
-        $then = static fn (Message $message): iterable => [];
+        $then = static fn (MessageInterface $message): iterable => [];
 
         $rule = rule(
             name: "Test Rule",
@@ -46,7 +46,7 @@ final class RuleFunctionTest extends TestCase
     {
         $actions = [
             new class() implements Action {
-                public function __invoke(Message $message): void
+                public function __invoke(MessageInterface $message): void
                 {
                 }
             },
@@ -55,10 +55,10 @@ final class RuleFunctionTest extends TestCase
         $rule = rule(
             name: "Test Rule",
             when: any(),
-            then: static fn (Message $message): iterable => $actions
+            then: static fn (MessageInterface $message): iterable => $actions
         );
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $result = ($rule)($message);
 
         $this->assertSame($actions, iterator_to_array($result));

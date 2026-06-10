@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Model;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\Matcher;
@@ -23,9 +23,9 @@ final class RuleTest extends TestCase
         $anyMatcher = new AnyMatcher();
         $action1 = $this->createStub(Action::class);
         $action2 = $this->createStub(Action::class);
-        $callback = fn (Message $message): array => [$action1, $action2];
+        $callback = fn (MessageInterface $message): array => [$action1, $action2];
         $rule = new Rule('test-rule', $anyMatcher, $callback);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         // Act
         $actions = $rule($message);
@@ -39,16 +39,16 @@ final class RuleTest extends TestCase
     {
         // Arrange: matcher that never matches
         $matcher = new class() implements Matcher {
-            public function matches(Message $message): bool
+            public function matches(MessageInterface $message): bool
             {
                 return false;
             }
         };
         $action1 = $this->createStub(Action::class);
         $action2 = $this->createStub(Action::class);
-        $callback = fn (Message $message): array => [$action1, $action2];
+        $callback = fn (MessageInterface $message): array => [$action1, $action2];
         $rule = new Rule('test-rule', $matcher, $callback);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         // Act
         $actions = $rule($message);
@@ -63,9 +63,9 @@ final class RuleTest extends TestCase
         // Arrange: null matcher (legacy behavior)
         $action1 = $this->createStub(Action::class);
         $action2 = $this->createStub(Action::class);
-        $callback = fn (Message $message): array => [$action1, $action2];
+        $callback = fn (MessageInterface $message): array => [$action1, $action2];
         $rule = new Rule('legacy-rule', null, $callback);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         // Act
         $actions = $rule($message);
@@ -79,19 +79,19 @@ final class RuleTest extends TestCase
     {
         // Arrange: matcher that doesn't match
         $matcher = new class() implements Matcher {
-            public function matches(Message $message): bool
+            public function matches(MessageInterface $message): bool
             {
                 return false;
             }
         };
         $callbackExecuted = false;
         $action = $this->createStub(Action::class);
-        $callback = function (Message $message) use (&$callbackExecuted, $action): array {
+        $callback = function (MessageInterface $message) use (&$callbackExecuted, $action): array {
             $callbackExecuted = true;
             return [$action];
         };
         $rule = new Rule('test-rule', $matcher, $callback);
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         // Act
         $rule($message);

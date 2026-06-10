@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matcher that checks if message body content matches a pattern.
@@ -29,7 +29,7 @@ final readonly class BodyMatcher implements Matcher
         $this->patternMatcher = new PatternMatcher($pattern);
     }
 
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
         // Check plain text body
         $text = $message->text();

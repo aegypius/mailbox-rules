@@ -8,6 +8,7 @@ use DirectoryTree\ImapEngine\Folder;
 use DirectoryTree\ImapEngine\FolderRepository;
 use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action;
 use MailboxRules\Action\LogAction;
 use MailboxRules\Matcher\AllOfMatcher;
@@ -31,7 +32,7 @@ final class RulesWatchTest extends TestCase
                 new FolderMatcher('Free'),
                 new SubjectMatcher('facture')
             ),
-            then: static function (Message $m): iterable { yield new LogAction(); }
+            then: static function (MessageInterface $m): iterable { yield new LogAction(); }
         );
 
         $mailbox = $this->createMock(Mailbox::class);
@@ -68,7 +69,7 @@ final class RulesWatchTest extends TestCase
         $rule = new Rule(
             name: 'Watch inbox',
             matcher: null,
-            then: static function (Message $m): iterable { yield new LogAction(); }
+            then: static function (MessageInterface $m): iterable { yield new LogAction(); }
         );
 
         $mailbox = $this->createMock(Mailbox::class);
@@ -97,7 +98,7 @@ final class RulesWatchTest extends TestCase
         $action = new class() implements Action {
             public bool $invoked = false;
 
-            public function __invoke(Message $message): void
+            public function __invoke(MessageInterface $message): void
             {
                 $this->invoked = true;
             }
@@ -106,7 +107,7 @@ final class RulesWatchTest extends TestCase
         $rule = new Rule(
             name: 'Inbox rule',
             matcher: null,
-            then: static function (Message $message) use ($action): iterable {
+            then: static function (MessageInterface $message) use ($action): iterable {
                 yield $action;
             }
         );

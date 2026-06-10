@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matcher that inverts the result of another matcher (logical NOT).
@@ -18,7 +18,7 @@ final readonly class NotMatcher implements Matcher
     ) {
     }
 
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
         return !$this->matcher->matches($message);
     }

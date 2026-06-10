@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\BodyMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +14,7 @@ final class BodyMatcherTest extends TestCase
 {
     public function testMatchesExactTextInPlainTextBody(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn('Please find the invoice attached.');
         $message->method('html')->willReturn(null);
 
@@ -25,7 +25,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testMatchesWildcardInPlainTextBody(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn('Meeting scheduled for tomorrow at 3pm');
         $message->method('html')->willReturn(null);
 
@@ -36,7 +36,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testMatchesExactTextInHtmlBody(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn(null);
         $message->method('html')->willReturn('<p>Your order #12345 has shipped.</p>');
 
@@ -47,7 +47,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testMatchesWildcardInHtmlBody(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn(null);
         $message->method('html')->willReturn('<html><body>Confirmation code: ABC123</body></html>');
 
@@ -58,7 +58,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testMatchesInEitherTextOrHtmlBody(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn('Plain text version');
         $message->method('html')->willReturn('<p>HTML version with special keyword</p>');
 
@@ -71,7 +71,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testDoesNotMatchWhenPatternNotFound(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn('This is the message body');
         $message->method('html')->willReturn('<p>HTML body content</p>');
 
@@ -82,7 +82,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testReturnsFalseWhenBothBodiesAreNull(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn(null);
         $message->method('html')->willReturn(null);
 
@@ -93,7 +93,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testMatchesRegexPattern(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn('Your verification code is 123456');
         $message->method('html')->willReturn(null);
 
@@ -104,7 +104,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testIsCaseInsensitive(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn('IMPORTANT NOTICE');
         $message->method('html')->willReturn(null);
 
@@ -115,7 +115,7 @@ final class BodyMatcherTest extends TestCase
 
     public function testChecksTextBodyFirst(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('text')->willReturn('found in text');
         $message->method('html')->willReturn('<p>found in html</p>');
 

@@ -8,6 +8,7 @@ use DirectoryTree\ImapEngine\Collections\MessageCollection;
 use DirectoryTree\ImapEngine\Folder;
 use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use DirectoryTree\ImapEngine\MessageQuery;
 use MailboxRules\Action\Flag;
 use MailboxRules\Action\MarkAsRead;
@@ -58,7 +59,7 @@ class RulesPreviewTest extends TestCase
 
         $this->assertCount(1, $results);
         $this->assertInstanceOf(PreviewResult::class, $results[0]);
-        $this->assertSame($message, $results[0]->message);
+        $this->assertInstanceOf(MessageInterface::class, $results[0]->message);
         $this->assertSame('Test Rule', $results[0]->ruleName);
         $this->assertCount(1, $results[0]->actions);
         $this->assertInstanceOf(MoveToFolder::class, $results[0]->actions[0]);
@@ -150,7 +151,7 @@ class RulesPreviewTest extends TestCase
         $results = $rules->preview();
 
         $this->assertCount(2, $results);
-        $this->assertSame($message1, $results[0]->message);
-        $this->assertSame($message2, $results[1]->message);
+        $this->assertInstanceOf(MessageInterface::class, $results[0]->message);
+        $this->assertInstanceOf(MessageInterface::class, $results[1]->message);
     }
 }

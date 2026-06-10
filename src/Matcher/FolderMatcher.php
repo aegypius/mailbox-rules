@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matches messages based on the folder/directory they are in.
@@ -20,8 +20,8 @@ final readonly class FolderMatcher implements Matcher
         $this->patternMatcher = new PatternMatcher($pattern);
     }
 
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
-        return $this->patternMatcher->matches($message->folder()->path());
+        return $this->patternMatcher->matches($message->folderPath());
     }
 }

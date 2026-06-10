@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MailboxRules\Model;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\Matcher;
 
 final readonly class Rule implements \Stringable
@@ -13,7 +13,7 @@ final readonly class Rule implements \Stringable
     /**
      * @param string $name The name of the rule
      * @param Matcher|null $matcher The matcher to evaluate (null for legacy rules)
-     * @param \Closure(Message): iterable<Action> $then The callback that returns actions
+     * @param \Closure(MessageInterface): iterable<Action> $then The callback that returns actions
      */
     public function __construct(
         public string $name,
@@ -30,14 +30,12 @@ final readonly class Rule implements \Stringable
      *
      * @return iterable<Action>
      */
-    public function __invoke(Message $message): iterable
+    public function __invoke(MessageInterface $message): iterable
     {
-        // If matcher exists and doesn't match, return empty
         if ($this->matcher instanceof \MailboxRules\Matcher\Matcher && !$this->matcher->matches($message)) {
             return [];
         }
 
-        // Otherwise execute callback (legacy or matched)
         return ($this->then)($message);
     }
 

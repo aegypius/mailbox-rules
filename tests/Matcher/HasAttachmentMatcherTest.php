@@ -2,7 +2,7 @@
 
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\HasAttachmentMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -12,7 +12,7 @@ final class HasAttachmentMatcherTest extends TestCase
 {
     public function testMatchesMessageWithAttachments(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('hasAttachments')->willReturn(true);
 
         $hasAttachmentMatcher = new HasAttachmentMatcher();
@@ -22,7 +22,7 @@ final class HasAttachmentMatcherTest extends TestCase
 
     public function testDoesNotMatchMessageWithoutAttachments(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('hasAttachments')->willReturn(false);
 
         $hasAttachmentMatcher = new HasAttachmentMatcher();

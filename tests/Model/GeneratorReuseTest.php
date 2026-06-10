@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Model;
 
 use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action\LogAction;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
@@ -38,8 +38,8 @@ final class GeneratorReuseTest extends TestCase
         ];
 
         $mockMailbox = $this->createStub(Mailbox::class);
-        $mockMessage1 = $this->createStub(Message::class);
-        $mockMessage2 = $this->createStub(Message::class);
+        $mockMessage1 = $this->createStub(MessageInterface::class);
+        $mockMessage2 = $this->createStub(MessageInterface::class);
 
         // First rule invocation should work
         $rule = $rules[0];
@@ -69,8 +69,8 @@ final class GeneratorReuseTest extends TestCase
         ];
 
         $this->createStub(Mailbox::class);
-        $mockMessage1 = $this->createStub(Message::class);
-        $mockMessage2 = $this->createStub(Message::class);
+        $mockMessage1 = $this->createStub(MessageInterface::class);
+        $mockMessage2 = $this->createStub(MessageInterface::class);
 
         $rule = $rules[0];
 
@@ -98,8 +98,8 @@ final class GeneratorReuseTest extends TestCase
             ),
         ];
 
-        $mockMessage1 = $this->createStub(Message::class);
-        $mockMessage2 = $this->createStub(Message::class);
+        $mockMessage1 = $this->createStub(MessageInterface::class);
+        $mockMessage2 = $this->createStub(MessageInterface::class);
 
         $rule = $rules[0];
 

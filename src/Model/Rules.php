@@ -6,6 +6,8 @@ namespace MailboxRules\Model;
 
 use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Adapter\ImapMessageAdapter;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Helper\FolderExtractor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -27,10 +29,10 @@ final readonly class Rules
     /**
      * @return list<Parameter>
      */
-    private function useParameters(Message $message): array
+    private function useParameters(MessageInterface $message): array
     {
         return [
-            Parameter::typed(Message::class, $message),
+            Parameter::typed(MessageInterface::class, $message),
             Parameter::typed(LoggerInterface::class, $this->logger),
         ];
     }
@@ -62,7 +64,7 @@ final readonly class Rules
      *
      * @param list<Rule> $rules
      */
-    private function doApplyRules(Message $message, array $rules): void
+    private function doApplyRules(MessageInterface $message, array $rules): void
     {
         foreach ($rules as $rule) {
             try {
@@ -138,7 +140,7 @@ final readonly class Rules
             // Apply only the rules for this folder
             foreach ($messages as $message) {
                 assert($message instanceof Message);
-                $this->doApplyRules($message, $rulesForFolder);
+                $this->doApplyRules(new ImapMessageAdapter($message), $rulesForFolder);
             }
         }
 
@@ -171,7 +173,7 @@ final readonly class Rules
             ]);
 
             $folder->idle(function (Message $message) use ($rulesForFolder): void {
-                $this->doApplyRules($message, $rulesForFolder);
+                $this->doApplyRules(new ImapMessageAdapter($message), $rulesForFolder);
             });
         }
     }
@@ -212,11 +214,12 @@ final readonly class Rules
 
             foreach ($messageQuery->get() as $message) {
                 assert($message instanceof Message);
+                $adapter = new ImapMessageAdapter($message);
 
                 // Only check rules for this folder
                 foreach ($rulesForFolder as $rule) {
                     // Evaluate the rule to get actions (but don't execute them)
-                    $actions = $rule($message);
+                    $actions = $rule($adapter);
                     $actionsList = [];
 
                     // Collect actions without executing
@@ -227,7 +230,7 @@ final readonly class Rules
                     // Only add result if rule matched (has actions)
                     if ($actionsList !== []) {
                         $results[] = new PreviewResult(
-                            message: $message,
+                            message: $adapter,
                             ruleName: $rule->name,
                             actions: $actionsList,
                         );
