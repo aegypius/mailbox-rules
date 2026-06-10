@@ -80,6 +80,13 @@ final readonly class Rules
                         Parameter::union(...$this->useParameters($message))
                     );
                 }
+
+                if ($actionsList !== []) {
+                    $this->logger->info('Rule "{rule}" matched message: {subject}', [
+                        'rule' => $rule->name,
+                        'subject' => $message->subject() ?? '(no subject)',
+                    ]);
+                }
             } catch (\Exception $e) {
                 if (str_contains($e->getMessage(), 'closed generator')) {
                     $this->logger->warning(sprintf("Skipping rule '%s' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.", $rule->name));
@@ -102,8 +109,10 @@ final readonly class Rules
         foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
             // Decode the special inbox key
             $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
-            $this->logger->debug('Fetching messages from folder: {folder}', [
-                'folder' => $actualPath ?? 'INBOX',
+            $folderLabel = $actualPath ?? 'INBOX';
+
+            $this->logger->info('Processing folder: {folder}', [
+                'folder' => $folderLabel,
             ]);
 
             // Get folder and messages
@@ -119,9 +128,11 @@ final readonly class Rules
             }
 
             $messages = $folder->messages()->withHeaders()->get();
+            $messageCount = count($messages);
 
-            $this->logger->debug('Processing {messages_count} messages', [
-                'messages_count' => count($messages),
+            $this->logger->info('Found {messages_count} message(s) in {folder}', [
+                'messages_count' => $messageCount,
+                'folder' => $folderLabel,
             ]);
 
             // Apply only the rules for this folder
@@ -142,6 +153,7 @@ final readonly class Rules
 
         foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
             $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
+            $folderLabel = $actualPath ?? 'INBOX';
 
             $folder = $actualPath === null
                 ? $this->mailbox->inbox()
@@ -153,6 +165,10 @@ final readonly class Rules
                 ]);
                 continue;
             }
+
+            $this->logger->info('Watching folder: {folder}', [
+                'folder' => $folderLabel,
+            ]);
 
             $folder->idle(function (Message $message) use ($rulesForFolder): void {
                 $this->doApplyRules($message, $rulesForFolder);
