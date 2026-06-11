@@ -22,8 +22,15 @@ final readonly class Rules
     public function __construct(
         private Mailbox $mailbox,
         private iterable $rules,
-        private LoggerInterface $logger = new NullLogger()
+        private LoggerInterface $logger = new NullLogger(),
+        private StatsCollector $statsCollector = new StatsCollector(),
     ) {
+    }
+
+    /** @return list<RuleExecutionStats> */
+    public function stats(): array
+    {
+        return $this->statsCollector->all();
     }
 
     /**
@@ -67,23 +74,36 @@ final readonly class Rules
     private function doApplyRules(MessageInterface $message, array $rules): void
     {
         foreach ($rules as $rule) {
+            $startTimeNs = hrtime(true);
+            $matched = false;
+            $actionCount = 0;
+            $failureCount = 0;
+
             try {
                 $actions = $rule($message);
 
                 // Materialize generator into array to avoid "already closed generator" error
                 // when actions modify the message (e.g., move/delete)
                 $actionsList = is_array($actions) ? $actions : iterator_to_array($actions, false);
+                $matched = $actionsList !== [];
 
                 foreach ($actionsList as $action) {
                     // Cast to callable for PHPStan - all Actions implement __invoke
                     /** @var callable $callableAction */
                     $callableAction = $action;
-                    Callback::createFor($callableAction)->invokeAll(
-                        Parameter::union(...$this->useParameters($message))
-                    );
+                    try {
+                        Callback::createFor($callableAction)->invokeAll(
+                            Parameter::union(...$this->useParameters($message))
+                        );
+                        $actionCount++;
+                    } catch (\Exception $actionException) {
+                        $failureCount++;
+                        $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);
+                        throw $actionException;
+                    }
                 }
 
-                if ($actionsList !== []) {
+                if ($matched) {
                     $this->logger->info('Rule "{rule}" matched message: {subject}', [
                         'rule' => $rule->name,
                         'subject' => $message->subject() ?? '(no subject)',
@@ -91,17 +111,32 @@ final readonly class Rules
                 }
             } catch (\Exception $e) {
                 if (str_contains($e->getMessage(), 'closed generator')) {
+                    $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);
                     $this->logger->warning(sprintf("Skipping rule '%s' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.", $rule->name));
                     continue;
                 }
 
                 throw $e;
             }
+
+            $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);
         }
+    }
+
+    private function recordStats(string $ruleName, bool $matched, int $actionCount, int $failureCount, int $startTimeNs): void
+    {
+        $this->statsCollector->recordEvaluation(
+            $ruleName,
+            $matched,
+            $actionCount,
+            $failureCount,
+            (hrtime(true) - $startTimeNs) / 1_000_000,
+        );
     }
 
     public function apply(): void
     {
+        $this->statsCollector->reset();
         $this->logger->debug('Connecting to mailbox...');
         $this->mailbox->connect();
 
@@ -149,6 +184,7 @@ final readonly class Rules
 
     public function watch(): void
     {
+        $this->statsCollector->reset();
         $this->mailbox->connect();
 
         $rulesByFolder = $this->groupRulesByFolder();
