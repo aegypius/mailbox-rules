@@ -80,6 +80,7 @@ final class ImapMailboxTest extends TestCase
     #[Test]
     public function fetches_messages_above_the_uid_floor(): void
     {
+        $calls = [];
         $messages = [];
         foreach ([3, 7, 9] as $uid) {
             $message = $this->createStub(Message::class);
@@ -90,6 +91,16 @@ final class ImapMailboxTest extends TestCase
         $query = $this->createStub(MessageQuery::class);
         $query->method('withHeaders')->willReturn($query);
         $query->method('get')->willReturn(new MessageCollection($messages));
+        $query->method('__call')->willReturnCallback(function (string $method, array $args) use ($query, &$calls) {
+            $calls[] = [$method, $args];
+
+            return $query;
+        });
+        $query->method('limit')->willReturnCallback(function (int $limit) use ($query, &$calls) {
+            $calls[] = ['limit', [$limit]];
+
+            return $query;
+        });
         $folder = $this->createStub(Folder::class);
         $folder->method('messages')->willReturn($query);
 
@@ -98,7 +109,12 @@ final class ImapMailboxTest extends TestCase
         ], $folder));
 
         self::assertSame([7, 9], array_map(static fn ($m): int => $m->uid(), $port->messages('INBOX', 3)));
+        self::assertSame([['uid', [4, INF]]], $calls);
         self::assertCount(3, $port->messages('INBOX'));
+
+        $calls = [];
+        $port->messages('INBOX', limit: 2);
+        self::assertSame([['limit', [2]]], $calls);
     }
 
     #[Test]

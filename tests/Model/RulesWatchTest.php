@@ -84,4 +84,19 @@ final class RulesWatchTest extends TestCase
         self::assertTrue($free->isFlagged());
         self::assertFalse($inbox->isFlagged());
     }
+
+    #[Test]
+    public function watch_all_covers_every_mailbox_in_one_loop(): void
+    {
+        $first = new InMemoryMailbox();
+        $second = new InMemoryMailbox();
+        $a = $first->deliver('INBOX');
+        $b = $second->deliver('INBOX');
+        $rule = new Rule('Flag', new AnyMatcher(), static fn () => yield new Flag());
+
+        Rules::watchAll([new Rules($first, [$rule]), new Rules($second, [$rule])], interval: 0, passes: 2);
+
+        self::assertTrue($a->isFlagged());
+        self::assertTrue($b->isFlagged());
+    }
 }

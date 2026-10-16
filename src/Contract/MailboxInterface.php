@@ -14,10 +14,11 @@ interface MailboxInterface
 
     /**
      * @param int|null $afterUid Only messages with a UID strictly above it; null for all.
+     * @param int|null $limit At most this many messages, oldest first; null for all.
      * @return list<MessageInterface>
      * @throws \InvalidArgumentException when the Folder does not exist
      */
-    public function messages(string $folderPath, ?int $afterUid = null): array;
+    public function messages(string $folderPath, ?int $afterUid = null, ?int $limit = null): array;
 
     /**
      * Path of the special-use \Trash Folder, null when the server designates none.

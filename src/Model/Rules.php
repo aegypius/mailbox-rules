@@ -6,7 +6,6 @@ namespace MailboxRules\Model;
 
 use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
-use MailboxRules\Helper\FolderExtractor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Zenstruck\Callback;
@@ -14,15 +13,18 @@ use Zenstruck\Callback\Parameter;
 
 final readonly class Rules
 {
+    private Traversal $traversal;
+
     /**
      * @param iterable<Rule> $rules
      */
     public function __construct(
         private MailboxInterface $mailbox,
-        private iterable $rules,
+        iterable $rules,
         private LoggerInterface $logger = new NullLogger(),
         private StatsCollector $statsCollector = new StatsCollector(),
     ) {
+        $this->traversal = new Traversal($mailbox, $rules, $logger);
     }
 
     /**
@@ -43,28 +45,6 @@ final readonly class Rules
             Parameter::typed(LoggerInterface::class, $this->logger),
             Parameter::typed(MailboxInterface::class, $this->mailbox),
         ];
-    }
-
-    /**
-     * Group rules by their target folder path.
-     * Rules with AnyOfMatcher containing multiple folders will be duplicated across folders.
-     *
-     * @return array<string, list<Rule>>
-     */
-    private function groupRulesByFolder(): array
-    {
-        $grouped = [];
-        foreach ($this->rules as $rule) {
-            $folderPaths = FolderExtractor::extractAllFolderPaths($rule->matcher);
-            foreach ($folderPaths as $folderPath) {
-                // Use special key '__INBOX__' for null (inbox)
-                $key = $folderPath ?? '__INBOX__';
-                $grouped[$key] ??= [];
-                $grouped[$key][] = $rule;
-            }
-        }
-
-        return $grouped;
     }
 
     /**
@@ -123,107 +103,74 @@ final readonly class Rules
     public function apply(): void
     {
         $this->statsCollector->reset();
-        $this->processFolders($this->groupRulesByFolder(), []);
+        $this->traversal->pass($this->applyStep(...));
         $this->logger->debug('Done processing messages');
     }
 
     /**
-     * Apply once, then re-poll every folder for messages above the highest UID seen.
+     * One Watch pass: the first covers everything like apply(), later ones only new messages.
+     */
+    public function poll(): void
+    {
+        $this->traversal->poll($this->applyStep(...));
+    }
+
+    /**
+     * Poll every Rules in one loop, so no Mailbox blocks the others.
      *
+     * @param iterable<Rules> $all
      * @param int|null $passes Stop after this many passes; null runs forever.
      */
-    public function watch(int $interval = 60, ?int $passes = null): void
+    public static function watchAll(iterable $all, int $interval = 60, ?int $passes = null): void
     {
-        $this->statsCollector->reset();
-        $rulesByFolder = $this->groupRulesByFolder();
-        $marks = [];
+        foreach ($all as $rules) {
+            $rules->statsCollector->reset();
+        }
 
         for ($pass = 0; $passes === null || $pass < $passes; $pass++) {
             if ($pass > 0) {
                 sleep($interval);
             }
-            $marks = $this->processFolders($rulesByFolder, $pass === 0 ? [] : $marks);
+            foreach ($all as $rules) {
+                $rules->poll();
+            }
         }
     }
 
-    /**
-     * @param array<string, list<Rule>> $rulesByFolder
-     * @param array<string, int> $afterUids highest UID seen per folder; empty means everything
-     * @return array<string, int> highest UID seen per folder
-     */
-    private function processFolders(array $rulesByFolder, array $afterUids): array
+    public function watch(int $interval = 60, ?int $passes = null): void
     {
-        $marks = $afterUids;
-        $existing = $this->mailbox->folders();
+        self::watchAll([$this], $interval, $passes);
+    }
 
-        foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
-            $actualPath = $folderPath === '__INBOX__' ? 'INBOX' : $folderPath;
-
-            if (!in_array($actualPath, $existing, true)) {
-                $this->logger->warning('Folder not found: {folder}, skipping rules', [
-                    'folder' => $actualPath,
-                ]);
-                continue;
-            }
-
-            $this->logger->info('Processing folder: {folder}', [
-                'folder' => $actualPath,
-            ]);
-
-            $messages = $this->mailbox->messages($actualPath, $afterUids[$actualPath] ?? null);
-
-            $this->logger->info('Found {messages_count} message(s) in {folder}', [
-                'messages_count' => count($messages),
-                'folder' => $actualPath,
-            ]);
-
-            foreach ($messages as $message) {
-                $marks[$actualPath] = max($marks[$actualPath] ?? 0, $message->uid());
-                $this->doApplyRules($message, $rulesForFolder);
-            }
-        }
-
-        return $marks;
+    /**
+     * @param list<Rule> $rules
+     */
+    private function applyStep(MessageInterface $message, array $rules): void
+    {
+        $this->doApplyRules($message, $rules);
     }
 
     /**
      * Previews what actions would be executed for each message without actually executing them.
      *
-     * This is a dry-run mode useful for testing rule configurations before applying them.
-     *
      * @return list<PreviewResult> List of preview results showing messages, rules, and actions
      */
     public function preview(int $limit = 10): array
     {
-        $existing = $this->mailbox->folders();
+        $this->statsCollector->reset();
         $results = [];
 
-        foreach ($this->groupRulesByFolder() as $folderPath => $rulesForFolder) {
-            $actualPath = $folderPath === '__INBOX__' ? 'INBOX' : $folderPath;
+        $this->traversal->pass(function (MessageInterface $message, array $rules) use (&$results): void {
+            foreach ($rules as $rule) {
+                $startTimeNs = hrtime(true);
+                $actions = $rule($message);
+                $this->recordStats($rule->name, $actions !== [], 0, 0, $startTimeNs);
 
-            if (!in_array($actualPath, $existing, true)) {
-                continue;
-            }
-
-            $messages = $this->mailbox->messages($actualPath);
-            if ($limit > 0) {
-                $messages = array_slice($messages, 0, $limit);
-            }
-
-            foreach ($messages as $message) {
-                foreach ($rulesForFolder as $rule) {
-                    $actions = $rule($message);
-
-                    if ($actions !== []) {
-                        $results[] = new PreviewResult(
-                            message: $message,
-                            ruleName: $rule->name,
-                            actions: $actions,
-                        );
-                    }
+                if ($actions !== []) {
+                    $results[] = new PreviewResult(message: $message, ruleName: $rule->name, actions: $actions);
                 }
             }
-        }
+        }, $limit > 0 ? $limit : null);
 
         return $results;
     }

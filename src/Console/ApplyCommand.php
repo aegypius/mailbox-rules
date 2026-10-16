@@ -30,6 +30,7 @@ final class ApplyCommand extends Command
     public function __construct(
         RuleFileLoader|null $ruleFileLoader = null,
         MailboxFactoryInterface|null $mailboxFactory = null,
+        private readonly ?int $watchPasses = null,
     ) {
         parent::__construct();
         $this->ruleFileLoader = $ruleFileLoader ?? new RuleFileLoader();
@@ -58,7 +59,14 @@ final class ApplyCommand extends Command
                 "watch",
                 null,
                 InputOption::VALUE_NONE,
-                "Watch mailbox for new messages and apply rules in real-time"
+                "Keep applying rules to new messages, polling every --interval seconds"
+            )
+            ->addOption(
+                "interval",
+                null,
+                InputOption::VALUE_REQUIRED,
+                "Seconds between watch passes",
+                "60"
             )
             ->addOption(
                 "preview-limit",
@@ -100,14 +108,18 @@ final class ApplyCommand extends Command
         }
 
         if ($input->getOption("watch")) {
+            $rawInterval = $input->getOption("interval");
+            $interval = is_numeric($rawInterval) ? max(0, (int) $rawInterval) : 60;
+
+            $watched = [];
             foreach ($configurations as $mailboxConfig) {
                 if ($mailboxConfig->name !== null) {
                     $output->writeln(sprintf("<info>Watching mailbox: %s</info>", $mailboxConfig->name));
                 }
                 $mailbox = $this->mailboxFactory::createMailbox($mailboxConfig->dsn);
-                $rules = new Rules($mailbox, $mailboxConfig->rules, $logger);
-                $rules->watch();
+                $watched[] = new Rules($mailbox, $mailboxConfig->rules, $logger);
             }
+            Rules::watchAll($watched, $interval, $this->watchPasses);
             return Command::SUCCESS;
         }
 

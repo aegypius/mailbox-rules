@@ -55,6 +55,17 @@ final class MailboxContractTest extends TestCase
     }
 
     #[Test]
+    public function fetches_at_most_limit_messages_oldest_first(): void
+    {
+        $subjects = array_map(
+            static fn ($m): ?string => $m->subject(),
+            $this->mailbox()->messages('INBOX', limit: 1),
+        );
+
+        self::assertSame(['one'], $subjects);
+    }
+
+    #[Test]
     public function fetching_an_unknown_folder_fails(): void
     {
         $this->expectException(\InvalidArgumentException::class);

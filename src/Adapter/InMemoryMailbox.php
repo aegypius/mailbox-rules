@@ -58,15 +58,17 @@ final class InMemoryMailbox implements MailboxInterface
         return array_keys($this->messages);
     }
 
-    public function messages(string $folderPath, ?int $afterUid = null): array
+    public function messages(string $folderPath, ?int $afterUid = null, ?int $limit = null): array
     {
         $messages = $this->messages[$folderPath]
             ?? throw new \InvalidArgumentException(sprintf('Folder not found: %s', $folderPath));
 
-        return array_values(array_filter(
+        $messages = array_values(array_filter(
             $messages,
             static fn (InMemoryMessage $m): bool => $afterUid === null || $m->uid() > $afterUid,
         ));
+
+        return $limit === null ? $messages : array_slice($messages, 0, $limit);
     }
 
     public function trash(): ?string
