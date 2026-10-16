@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matcher that matches all messages unconditionally.
@@ -20,10 +20,10 @@ final readonly class AnyMatcher implements Matcher
     /**
      * Always returns true, matching any message.
      *
-     * @param Message $message The message to evaluate (unused)
+     * @param MessageInterface $message The message to evaluate (unused)
      * @return bool Always true
      */
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
         return true;
     }

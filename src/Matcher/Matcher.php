@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matcher interface for testing email message properties.
@@ -17,8 +17,8 @@ interface Matcher
     /**
      * Test if the given message matches this matcher's criteria.
      *
-     * @param Message $message The email message to test
+     * @param MessageInterface $message The email message to test
      * @return bool True if the message matches, false otherwise
      */
-    public function matches(Message $message): bool;
+    public function matches(MessageInterface $message): bool;
 }

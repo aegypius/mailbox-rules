@@ -6,6 +6,8 @@ namespace MailboxRules\Model;
 
 use DirectoryTree\ImapEngine\Mailbox;
 use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Adapter\ImapMessageAdapter;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Helper\FolderExtractor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -20,46 +22,26 @@ final readonly class Rules
     public function __construct(
         private Mailbox $mailbox,
         private iterable $rules,
-        private LoggerInterface $logger = new NullLogger()
+        private LoggerInterface $logger = new NullLogger(),
+        private StatsCollector $statsCollector = new StatsCollector(),
     ) {
     }
 
-    private function doApply(Message $message): void
+    /**
+     * @return list<RuleExecutionStats>
+     */
+    public function stats(): array
     {
-        foreach ($this->rules as $rule) {
-            try {
-                $actions = $rule($message);
-
-                // Materialize generator into array to avoid "already closed generator" error
-                // when actions modify the message (e.g., move/delete)
-                $actionsList = is_array($actions) ? $actions : iterator_to_array($actions, false);
-
-                foreach ($actionsList as $actionList) {
-                    // Cast to callable for PHPStan - all Actions implement __invoke
-                    /** @var callable $callableAction */
-                    $callableAction = $actionList;
-                    Callback::createFor($callableAction)->invokeAll(
-                        Parameter::union(...$this->useParameters($message))
-                    );
-                }
-            } catch (\Exception $e) {
-                if (str_contains($e->getMessage(), 'closed generator')) {
-                    $this->logger->warning(sprintf("Skipping rule '%s' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.", $rule->name));
-                    continue;
-                }
-
-                throw $e;
-            }
-        }
+        return $this->statsCollector->all();
     }
 
     /**
      * @return list<Parameter>
      */
-    private function useParameters(Message $message): array
+    private function useParameters(MessageInterface $message): array
     {
         return [
-            Parameter::typed(Message::class, $message),
+            Parameter::typed(MessageInterface::class, $message),
             Parameter::typed(LoggerInterface::class, $this->logger),
         ];
     }
@@ -91,37 +73,72 @@ final readonly class Rules
      *
      * @param list<Rule> $rules
      */
-    private function doApplyRules(Message $message, array $rules): void
+    private function doApplyRules(MessageInterface $message, array $rules): void
     {
         foreach ($rules as $rule) {
+            $startTimeNs = hrtime(true);
+            $matched = false;
+            $actionCount = 0;
+            $failureCount = 0;
+
             try {
                 $actions = $rule($message);
 
                 // Materialize generator into array to avoid "already closed generator" error
                 // when actions modify the message (e.g., move/delete)
                 $actionsList = is_array($actions) ? $actions : iterator_to_array($actions, false);
+                $matched = $actionsList !== [];
 
                 foreach ($actionsList as $action) {
                     // Cast to callable for PHPStan - all Actions implement __invoke
                     /** @var callable $callableAction */
                     $callableAction = $action;
-                    Callback::createFor($callableAction)->invokeAll(
-                        Parameter::union(...$this->useParameters($message))
-                    );
+                    try {
+                        Callback::createFor($callableAction)->invokeAll(
+                            Parameter::union(...$this->useParameters($message))
+                        );
+                        $actionCount++;
+                    } catch (\Exception $actionException) {
+                        $failureCount++;
+                        $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);
+                        throw $actionException;
+                    }
+                }
+
+                if ($matched) {
+                    $this->logger->info('Rule "{rule}" matched message: {subject}', [
+                        'rule' => $rule->name,
+                        'subject' => $message->subject() ?? '(no subject)',
+                    ]);
                 }
             } catch (\Exception $e) {
                 if (str_contains($e->getMessage(), 'closed generator')) {
+                    $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);
                     $this->logger->warning(sprintf("Skipping rule '%s' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.", $rule->name));
                     continue;
                 }
 
                 throw $e;
             }
+
+            $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);
         }
+    }
+
+    private function recordStats(string $ruleName, bool $matched, int $actionCount, int $failureCount, int $startTimeNs): void
+    {
+        $this->statsCollector->recordEvaluation(
+            $ruleName,
+            $matched,
+            $actionCount,
+            $failureCount,
+            (hrtime(true) - $startTimeNs) / 1_000_000,
+        );
     }
 
     public function apply(): void
     {
+        $this->statsCollector->reset();
         $this->logger->debug('Connecting to mailbox...');
         $this->mailbox->connect();
 
@@ -131,8 +148,10 @@ final readonly class Rules
         foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
             // Decode the special inbox key
             $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
-            $this->logger->debug('Fetching messages from folder: {folder}', [
-                'folder' => $actualPath ?? 'INBOX',
+            $folderLabel = $actualPath ?? 'INBOX';
+
+            $this->logger->info('Processing folder: {folder}', [
+                'folder' => $folderLabel,
             ]);
 
             // Get folder and messages
@@ -148,15 +167,17 @@ final readonly class Rules
             }
 
             $messages = $folder->messages()->withHeaders()->get();
+            $messageCount = count($messages);
 
-            $this->logger->debug('Processing {messages_count} messages', [
-                'messages_count' => count($messages),
+            $this->logger->info('Found {messages_count} message(s) in {folder}', [
+                'messages_count' => $messageCount,
+                'folder' => $folderLabel,
             ]);
 
             // Apply only the rules for this folder
             foreach ($messages as $message) {
                 assert($message instanceof Message);
-                $this->doApplyRules($message, $rulesForFolder);
+                $this->doApplyRules(new ImapMessageAdapter($message), $rulesForFolder);
             }
         }
 
@@ -165,7 +186,34 @@ final readonly class Rules
 
     public function watch(): void
     {
-        $this->mailbox->inbox()->idle($this->doApply(...));
+        $this->statsCollector->reset();
+        $this->mailbox->connect();
+
+        $rulesByFolder = $this->groupRulesByFolder();
+
+        foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
+            $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
+            $folderLabel = $actualPath ?? 'INBOX';
+
+            $folder = $actualPath === null
+                ? $this->mailbox->inbox()
+                : $this->mailbox->folders()->find($actualPath);
+
+            if ($folder === null) {
+                $this->logger->warning('Folder not found: {folder}, skipping watch', [
+                    'folder' => $actualPath,
+                ]);
+                continue;
+            }
+
+            $this->logger->info('Watching folder: {folder}', [
+                'folder' => $folderLabel,
+            ]);
+
+            $folder->idle(function (Message $message) use ($rulesForFolder): void {
+                $this->doApplyRules(new ImapMessageAdapter($message), $rulesForFolder);
+            });
+        }
     }
 
     /**
@@ -175,7 +223,7 @@ final readonly class Rules
      *
      * @return list<PreviewResult> List of preview results showing messages, rules, and actions
      */
-    public function preview(): array
+    public function preview(int $limit = 10): array
     {
         $this->mailbox->connect();
 
@@ -187,7 +235,7 @@ final readonly class Rules
             // Decode the special inbox key
             $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
 
-            // Get folder and messages (limit 10 per folder)
+            // Get folder and messages
             $folder = $actualPath === null
                 ? $this->mailbox->inbox()
                 : $this->mailbox->folders()->find($actualPath);
@@ -196,15 +244,20 @@ final readonly class Rules
                 continue;
             }
 
-            $messageQuery = $folder->messages()->withHeaders()->limit(10);
+            $messageQuery = $folder->messages()->withHeaders();
+
+            if ($limit > 0) {
+                $messageQuery = $messageQuery->limit($limit);
+            }
 
             foreach ($messageQuery->get() as $message) {
                 assert($message instanceof Message);
+                $adapter = new ImapMessageAdapter($message);
 
                 // Only check rules for this folder
                 foreach ($rulesForFolder as $rule) {
                     // Evaluate the rule to get actions (but don't execute them)
-                    $actions = $rule($message);
+                    $actions = $rule($adapter);
                     $actionsList = [];
 
                     // Collect actions without executing
@@ -215,7 +268,7 @@ final readonly class Rules
                     // Only add result if rule matched (has actions)
                     if ($actionsList !== []) {
                         $results[] = new PreviewResult(
-                            message: $message,
+                            message: $adapter,
                             ruleName: $rule->name,
                             actions: $actionsList,
                         );

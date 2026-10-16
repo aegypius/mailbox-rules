@@ -13,7 +13,6 @@ use MailboxRules\Console\ApplyCommand;
 use MailboxRules\Loader\RuleFileLoader;
 use MailboxRules\MailboxFactoryInterface;
 use MailboxRules\ValueObject\Dsn;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -22,7 +21,6 @@ use function sys_get_temp_dir;
 use function unlink;
 
 #[CoversClass(ApplyCommand::class)]
-#[AllowMockObjectsWithoutExpectations]
 class ApplyCommandTest extends TestCase
 {
     private string $tempFile = '';

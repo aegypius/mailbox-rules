@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Action;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action\MoveToTrash;
+use MailboxRules\Contract\MessageInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ final class MoveToTrashTest extends TestCase
 {
     public function testMovesToDefaultTrashFolder(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('move')
             ->with('Trash', false);
@@ -25,7 +25,7 @@ final class MoveToTrashTest extends TestCase
 
     public function testMovesToCustomTrashFolder(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('move')
             ->with('[Gmail]/Trash', false);
@@ -36,7 +36,7 @@ final class MoveToTrashTest extends TestCase
 
     public function testMovesToTrashWithExpunge(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('move')
             ->with('Deleted Items', true);

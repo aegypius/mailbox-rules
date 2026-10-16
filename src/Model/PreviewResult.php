@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MailboxRules\Model;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Represents a preview of what actions would be executed for a message.
@@ -16,12 +16,12 @@ use MailboxRules\Action;
 final readonly class PreviewResult
 {
     /**
-     * @param Message $message The message being processed
+     * @param MessageInterface $message The message being processed
      * @param string $ruleName The name of the rule that matched
      * @param list<Action> $actions The actions that would be executed
      */
     public function __construct(
-        public Message $message,
+        public MessageInterface $message,
         public string $ruleName,
         public array $actions,
     ) {

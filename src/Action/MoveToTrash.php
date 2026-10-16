@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MailboxRules\Action;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Action that moves a message to the Trash folder.
@@ -23,7 +23,7 @@ final readonly class MoveToTrash implements Action
     ) {
     }
 
-    public function __invoke(Message $message): void
+    public function __invoke(MessageInterface $message): void
     {
         $message->move($this->trashFolder, $this->expunge);
     }

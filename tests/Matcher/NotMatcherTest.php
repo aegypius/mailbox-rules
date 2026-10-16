@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Matcher\NotMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -15,7 +15,7 @@ final class NotMatcherTest extends TestCase
 {
     public function testInvertsMatcherReturningTrue(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $matcher = $this->createMatcherThatReturns(true);
 
         $notMatcher = new NotMatcher($matcher);
@@ -25,7 +25,7 @@ final class NotMatcherTest extends TestCase
 
     public function testInvertsMatcherReturningFalse(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $matcher = $this->createMatcherThatReturns(false);
 
         $notMatcher = new NotMatcher($matcher);
@@ -35,7 +35,7 @@ final class NotMatcherTest extends TestCase
 
     public function testInvertsRealMatcherTrue(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         $innerMatcher = $this->createMatcherThatChecks(fn (): bool => true);
 
@@ -46,7 +46,7 @@ final class NotMatcherTest extends TestCase
 
     public function testInvertsRealMatcherFalse(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
 
         $innerMatcher = $this->createMatcherThatChecks(fn (): bool => false);
 
@@ -57,7 +57,7 @@ final class NotMatcherTest extends TestCase
 
     public function testDoubleNegation(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $matcher = $this->createMatcherThatReturns(true);
 
         $notNotMatcher = new NotMatcher(new NotMatcher($matcher));
@@ -69,7 +69,7 @@ final class NotMatcherTest extends TestCase
     {
         $message = $this->createMessageFrom('user@example.com');
 
-        $fromMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->from()?->email() === 'user@example.com');
+        $fromMatcher = $this->createMatcherThatChecks(fn (MessageInterface $message): bool => $message->from()?->email() === 'user@example.com');
 
         $notMatcher = new NotMatcher($fromMatcher);
 
@@ -80,7 +80,7 @@ final class NotMatcherTest extends TestCase
     {
         $message = $this->createMessageFrom('other@example.com');
 
-        $fromMatcher = $this->createMatcherThatChecks(fn (Message $message): bool => $message->from()?->email() === 'user@example.com');
+        $fromMatcher = $this->createMatcherThatChecks(fn (MessageInterface $message): bool => $message->from()?->email() === 'user@example.com');
 
         $notMatcher = new NotMatcher($fromMatcher);
 
@@ -103,9 +103,9 @@ final class NotMatcherTest extends TestCase
         return $matcher;
     }
 
-    private function createMessageFrom(string $email): Message
+    private function createMessageFrom(string $email): MessageInterface
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $address = $this->createStub(\DirectoryTree\ImapEngine\Address::class);
         $address->method('email')->willReturn($email);
         $message->method('from')->willReturn($address);

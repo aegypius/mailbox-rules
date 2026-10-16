@@ -7,6 +7,7 @@ namespace MailboxRules\Console;
 use MailboxRules\Loader\RuleFileLoader;
 use MailboxRules\MailboxFactory;
 use MailboxRules\MailboxFactoryInterface;
+use MailboxRules\Model\Rules;
 use MailboxRules\Service\MailboxProcessor;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
@@ -52,6 +53,19 @@ final class ApplyCommand extends Command
                 null,
                 InputOption::VALUE_NONE,
                 "Preview actions without executing them"
+            )
+            ->addOption(
+                "watch",
+                null,
+                InputOption::VALUE_NONE,
+                "Watch mailbox for new messages and apply rules in real-time (IMAP IDLE)"
+            )
+            ->addOption(
+                "preview-limit",
+                null,
+                InputOption::VALUE_REQUIRED,
+                "Maximum number of messages to preview per folder (0 = all)",
+                "10"
             );
     }
 
@@ -80,11 +94,30 @@ final class ApplyCommand extends Command
         // Create processor with shared logger and factory
         $processor = new MailboxProcessor($this->mailboxFactory, $logger);
 
+        if ($input->getOption("watch") && $input->getOption("dry-run")) {
+            $output->writeln("<error>Options --watch and --dry-run are mutually exclusive.</error>");
+            return Command::FAILURE;
+        }
+
+        if ($input->getOption("watch")) {
+            foreach ($configurations as $mailboxConfig) {
+                if ($mailboxConfig->name !== null) {
+                    $output->writeln(sprintf("<info>Watching mailbox: %s</info>", $mailboxConfig->name));
+                }
+                $mailbox = $this->mailboxFactory::createMailbox($mailboxConfig->dsn);
+                $rules = new Rules($mailbox, $mailboxConfig->rules, $logger);
+                $rules->watch();
+            }
+            return Command::SUCCESS;
+        }
+
         if ($input->getOption("dry-run")) {
             $hasResults = false;
+            $rawLimit = $input->getOption("preview-limit");
+            $previewLimit = is_numeric($rawLimit) ? (int) $rawLimit : 10;
 
             foreach ($configurations as $mailboxConfig) {
-                $results = $processor->preview($mailboxConfig);
+                $results = $processor->preview($mailboxConfig, $previewLimit);
 
                 if ($results === []) {
                     continue;

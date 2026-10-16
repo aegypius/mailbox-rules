@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Action;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action\Delete;
+use MailboxRules\Contract\MessageInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ final class DeleteTest extends TestCase
 {
     public function testDeletesMessageWithExpungeByDefault(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('delete')
             ->with(true);
@@ -25,7 +25,7 @@ final class DeleteTest extends TestCase
 
     public function testDeletesMessageWithoutExpungeWhenSpecified(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('delete')
             ->with(false);
@@ -36,7 +36,7 @@ final class DeleteTest extends TestCase
 
     public function testDeletesMessageWithExpungeWhenExplicitlyEnabled(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('delete')
             ->with(true);

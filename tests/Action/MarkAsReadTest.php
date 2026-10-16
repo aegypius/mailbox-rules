@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Action;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action\MarkAsRead;
+use MailboxRules\Contract\MessageInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ final class MarkAsReadTest extends TestCase
 {
     public function testMarksMessageAsRead(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('markRead');
 
@@ -25,7 +25,7 @@ final class MarkAsReadTest extends TestCase
     public function testMarksMessageAsReadAlternativeName(): void
     {
         // markRead() is an alias for markSeen()
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('markRead');
 

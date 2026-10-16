@@ -6,7 +6,7 @@ namespace MailboxRules\Matcher;
 
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matcher that matches messages received after a specific date/time.
@@ -25,7 +25,7 @@ final readonly class ReceivedAfterMatcher implements Matcher
             : Carbon::parse($datetime);
     }
 
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
         $messageDate = $message->date();
 

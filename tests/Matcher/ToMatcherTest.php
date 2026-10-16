@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Matcher;
 
 use DirectoryTree\ImapEngine\Address;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\ToMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -138,9 +138,9 @@ final class ToMatcherTest extends TestCase
     /**
      * @param array<string> $emails
      */
-    private function createMessageWithTo(array $emails): Message
+    private function createMessageWithTo(array $emails): MessageInterface
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $addresses = array_map(function (string $email): \PHPUnit\Framework\MockObject\Stub {
             $address = $this->createStub(Address::class);
             $address->method('email')->willReturn($email);

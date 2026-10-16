@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\FolderMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -115,12 +114,10 @@ final class FolderMatcherTest extends TestCase
         ];
     }
 
-    private function createMessageWithFolder(string $folderPath): Message
+    private function createMessageWithFolder(string $folderPath): MessageInterface
     {
-        $message = $this->createStub(Message::class);
-        $folder = $this->createStub(Folder::class);
-        $folder->method('path')->willReturn($folderPath);
-        $message->method('folder')->willReturn($folder);
+        $message = $this->createStub(MessageInterface::class);
+        $message->method('folderPath')->willReturn($folderPath);
 
         return $message;
     }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Action;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action\MoveToFolder;
+use MailboxRules\Contract\MessageInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -14,11 +14,10 @@ final class MoveToFolderTest extends TestCase
 {
     public function testMovesMessageToSpecifiedFolder(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('move')
-            ->with('Archive')
-            ->willReturn(12345);
+            ->with('Archive');
 
         $moveToFolder = new MoveToFolder('Archive');
         $moveToFolder($message);
@@ -26,11 +25,10 @@ final class MoveToFolderTest extends TestCase
 
     public function testMovesMessageWithExpunge(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('move')
-            ->with('Trash', true)
-            ->willReturn(67890);
+            ->with('Trash', true);
 
         $moveToFolder = new MoveToFolder('Trash', expunge: true);
         $moveToFolder($message);
@@ -38,11 +36,10 @@ final class MoveToFolderTest extends TestCase
 
     public function testMovesMessageWithoutExpungeByDefault(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('move')
-            ->with('Important', false)
-            ->willReturn(11111);
+            ->with('Important', false);
 
         $moveToFolder = new MoveToFolder('Important');
         $moveToFolder($message);
@@ -50,61 +47,43 @@ final class MoveToFolderTest extends TestCase
 
     public function testMovesToNestedFolder(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('move')
-            ->with('Projects/ClientA')
-            ->willReturn(22222);
+            ->with('Projects/ClientA');
 
         $moveToFolder = new MoveToFolder('Projects/ClientA');
         $moveToFolder($message);
     }
 
-    public function testHandlesNullReturnFromMove(): void
+    public function testPassesRawFolderNameWithAccentedCharacters(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('move')
-            ->with('Archive')
-            ->willReturn(null);
-
-        $moveToFolder = new MoveToFolder('Archive');
-        $moveToFolder($message);
-
-        // No exception thrown - action completes successfully
-    }
-
-    public function testEncodesAccentedCharactersToModifiedUtf7(): void
-    {
-        $message = $this->createMock(Message::class);
-        $message->expects($this->once())
-            ->method('move')
-            ->with('Copropri&AOk-t&AOk-', false)
-            ->willReturn(12345);
+            ->with('Copropriété', false);
 
         $moveToFolder = new MoveToFolder('Copropriété');
         $moveToFolder($message);
     }
 
-    public function testEncodesCyrillicCharactersToModifiedUtf7(): void
+    public function testPassesRawFolderNameWithCyrillicCharacters(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('move')
-            ->with('&BBoEPgRABDcEOAQ9BDA-', false)
-            ->willReturn(67890);
+            ->with('Корзина', false);
 
         $moveToFolder = new MoveToFolder('Корзина');
         $moveToFolder($message);
     }
 
-    public function testEncodesAmpersandToModifiedUtf7(): void
+    public function testPassesRawFolderNameWithAmpersand(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects($this->once())
             ->method('move')
-            ->with('Inbox &- Archive', false)
-            ->willReturn(11111);
+            ->with('Inbox & Archive', false);
 
         $moveToFolder = new MoveToFolder('Inbox & Archive');
         $moveToFolder($message);

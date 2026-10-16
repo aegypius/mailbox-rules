@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Attachment;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\AttachmentInterface;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AttachmentTypeMatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -11,9 +13,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AttachmentTypeMatcher::class)]
 final class AttachmentTypeMatcherTest extends TestCase
 {
-    private function createAttachment(string $contentType, ?string $filename): Attachment
+    private function createAttachment(string $contentType, ?string $filename): AttachmentInterface
     {
-        $attachment = $this->createStub(Attachment::class);
+        $attachment = $this->createStub(AttachmentInterface::class);
         $attachment->method('contentType')->willReturn($contentType);
         $attachment->method('filename')->willReturn($filename);
         $attachment->method('extension')->willReturn(
@@ -27,7 +29,7 @@ final class AttachmentTypeMatcherTest extends TestCase
     {
         $attachment = $this->createAttachment('image/jpeg', 'photo.jpg');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('image/jpeg');
@@ -39,7 +41,7 @@ final class AttachmentTypeMatcherTest extends TestCase
     {
         $attachment = $this->createAttachment('image/jpeg', 'photo.jpg');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('image/*');
@@ -51,7 +53,7 @@ final class AttachmentTypeMatcherTest extends TestCase
     {
         $attachment = $this->createAttachment('application/pdf', 'document.pdf');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('.pdf');
@@ -63,7 +65,7 @@ final class AttachmentTypeMatcherTest extends TestCase
     {
         $attachment = $this->createAttachment('application/pdf', 'document.pdf');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('pdf');
@@ -75,7 +77,7 @@ final class AttachmentTypeMatcherTest extends TestCase
     {
         $attachment = $this->createAttachment('application/pdf', 'document.pdf');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('*.pdf');
@@ -88,7 +90,7 @@ final class AttachmentTypeMatcherTest extends TestCase
         $attachment1 = $this->createAttachment('text/plain', 'notes.txt');
         $attachment2 = $this->createAttachment('image/jpeg', 'photo.jpg');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment1, $attachment2]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('image/*');
@@ -100,7 +102,7 @@ final class AttachmentTypeMatcherTest extends TestCase
     {
         $attachment = $this->createAttachment('image/jpeg', 'photo.jpg');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('application/pdf');
@@ -112,7 +114,7 @@ final class AttachmentTypeMatcherTest extends TestCase
     {
         $attachment = $this->createAttachment('image/jpeg', 'photo.jpg');
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('.pdf');
@@ -122,7 +124,7 @@ final class AttachmentTypeMatcherTest extends TestCase
 
     public function testReturnsFalseForNoAttachments(): void
     {
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('image/*');
@@ -134,7 +136,7 @@ final class AttachmentTypeMatcherTest extends TestCase
     {
         $attachment = $this->createAttachment('application/octet-stream', null);
 
-        $message = $this->createStub(Message::class);
+        $message = $this->createStub(MessageInterface::class);
         $message->method('attachments')->willReturn([$attachment]);
 
         $attachmentTypeMatcher = new AttachmentTypeMatcher('.pdf');

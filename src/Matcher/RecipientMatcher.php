@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matches messages based on any recipient (To, CC, or BCC).
@@ -21,7 +21,7 @@ final readonly class RecipientMatcher implements Matcher
         $this->patternMatcher = new PatternMatcher($pattern);
     }
 
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
         // Check To recipients
         foreach ($message->to() as $address) {

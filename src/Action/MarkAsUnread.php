@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MailboxRules\Action;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Marks a message as unread.
@@ -15,7 +15,7 @@ use MailboxRules\Action;
  */
 readonly class MarkAsUnread implements Action
 {
-    public function __invoke(Message $message): void
+    public function __invoke(MessageInterface $message): void
     {
         $message->markUnread();
     }

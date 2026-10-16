@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matches messages based on the sender's email address.
@@ -20,7 +20,7 @@ final readonly class FromMatcher implements Matcher
         $this->patternMatcher = new PatternMatcher($pattern);
     }
 
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
         $from = $message->from();
 

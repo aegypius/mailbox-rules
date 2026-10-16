@@ -584,9 +584,9 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 
 ---
 
-### Phase 11: Protocol Abstraction (Not Implemented)
+### Phase 11: Protocol Abstraction ✅ (Partially Complete)
 
-#### Task 11.1: Create Message Abstraction Layer
+#### Task 11.1: Create Message Abstraction Layer ✅
 **Purpose:** Decouple matchers and actions from IMAP-specific Message implementation
 
 **Design Goals:**
@@ -645,7 +645,7 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 
 ---
 
-#### Task 11.2: Create Attachment Abstraction Layer
+#### Task 11.2: Create Attachment Abstraction Layer ✅
 **Purpose:** Decouple attachment handling from IMAP-specific implementation
 
 **Red:**
@@ -680,7 +680,9 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 
 ---
 
-#### Task 11.3: Implement JMAP Support
+#### Task 11.3: Implement JMAP Support ❌ (Skipped)
+**Status:** No mature PHP JMAP client library available. Deferred indefinitely.
+
 **Purpose:** Add JMAP protocol support alongside existing IMAP support
 
 **Prerequisites:**
@@ -732,21 +734,23 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 
 ### Phase 12: Performance & Optimization (Not Implemented)
 
-#### Task 12.1: Implement Matcher Caching
-- Cache compiled regex patterns in PatternMatcher
-- Cache message property access (subject, from, to)
+#### Task 12.1: Implement Matcher Caching ✅ (Partial)
+- ✅ Cache compiled regex patterns in PatternMatcher (`1c0b017`)
+- ❌ Cache message property access (subject, from, to) — not implemented
 - Benchmark performance improvements
 
-#### Task 12.2: Implement Batch Operations
+#### Task 12.2: Implement Batch Operations ❌ (Not Implemented)
 - Process multiple messages in parallel
 - Batch IMAP/JMAP commands
 - Configurable concurrency limits
 
-#### Task 12.3: Implement Rule Statistics
-- Track rule execution counts
-- Track matcher performance
-- Track action success/failure rates
-- Export metrics for monitoring
+#### Task 12.3: Implement Rule Statistics ✅
+- ✅ Track rule execution counts per rule (`RuleExecutionStats`, `StatsCollector`)
+- ✅ Track matcher/execution time (`totalMatcherTimeMs`)
+- ✅ Track action success/failure rates (`actionCount`, `failureCount`)
+- ✅ `Rules::stats()` returns `list<RuleExecutionStats>` after `apply()`
+- ✅ Stats reset between `apply()` / `watch()` calls
+- ❌ Export metrics for external monitoring — not implemented
 
 ---
 
@@ -777,9 +781,8 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 
 ## Implementation Summary
 
-### Completed (Phases 1-9 + 10.1)
-- ✅ 29 tasks completed (20 core + 5 matchers + 3 advanced actions + 1 dry-run)
-- ✅ 243 tests, 339 assertions (100% passing)
+### Completed (Phases 1-9 + 10.1 + 11.1 + 11.2 + 12.1 + 12.3)
+- ✅ 360 tests, 580 assertions (100% passing)
 - ✅ Core DSL fully functional
 - ✅ Pattern matching (exact, wildcard, regex)
 - ✅ Basic matchers: any(), from(), to(), subject()
@@ -791,7 +794,11 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 - ✅ Logical combinators: allOf(), anyOf(), not()
 - ✅ Actions: MoveToFolder, MarkAsRead, Flag, CopyToFolder, Delete, MoveToTrash, MarkAsUnread, Unflag
 - ✅ Helper functions: chain(), env()
-- ✅ Dry-run mode: Rules::preview() + CLI --dry-run option
+- ✅ Dry-run mode: Rules::preview() + CLI --dry-run + configurable --preview-limit
+- ✅ Watch mode: CLI --watch flag for IMAP IDLE real-time processing
+- ✅ Protocol abstraction: MessageInterface, AttachmentInterface, ImapMessageAdapter, ImapAttachmentAdapter
+- ✅ Regex pattern caching in PatternMatcher
+- ✅ Rule execution statistics: RuleExecutionStats, StatsCollector, Rules::stats()
 - ✅ Integration tests and documentation
 - ✅ Backward compatibility maintained
 
@@ -803,16 +810,16 @@ The following features are documented in `SPECIFICATION.md` but not yet implemen
 - ❌ Rule pre/post conditions (Task 10.3 cancelled)
 
 **Phase 11: Protocol Abstraction & JMAP Support**
-- ❌ MessageInterface abstraction layer
-- ❌ AttachmentInterface abstraction layer
-- ❌ ImapMessageAdapter and ImapAttachmentAdapter
-- ❌ JMAP protocol support (JmapMessageAdapter, JmapAttachmentAdapter)
+- ✅ MessageInterface abstraction layer
+- ✅ AttachmentInterface abstraction layer
+- ✅ ImapMessageAdapter and ImapAttachmentAdapter
+- ❌ JMAP protocol support — skipped (no mature PHP JMAP client library)
 - ❌ Multi-protocol support via DSN (imap:// and jmap://)
 
 **Phase 12: Performance & Optimization**
-- ❌ Matcher caching (regex patterns, message properties)
+- ✅ Regex pattern caching in PatternMatcher (partial — message property caching not done)
 - ❌ Batch operations and parallel processing
-- ❌ Rule execution statistics and metrics
+- ✅ Rule execution statistics and metrics (RuleExecutionStats, StatsCollector)
 
 ---
 

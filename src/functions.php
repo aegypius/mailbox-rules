@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MailboxRules;
 
 use Carbon\CarbonInterface;
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\AnyOfMatcher;
@@ -55,7 +55,7 @@ function mailbox(string|Dsn $dsn, iterable $rules, ?string $name = null): Mailbo
  *
  * @param string $name The name of the rule.
  * @param Matcher|null $when The matcher to evaluate (new signature).
- * @param \Closure(Message): iterable<Action>|iterable<Action>|null $then The action callback or iterable (new signature).
+ * @param \Closure(MessageInterface): iterable<Action>|iterable<Action>|null $then The action callback or iterable (new signature).
  * @return Rule The created Rule object.
  */
 function rule(
@@ -71,17 +71,17 @@ function rule(
     // so it can be reused across multiple messages (generators are not rewindable)
     if (!$then instanceof \Closure) {
         $actions = is_array($then) ? $then : iterator_to_array($then, false);
-        $wrappedThen = static fn (): array => $actions;
+        $wrappedThen = static fn (MessageInterface $message): array => $actions;
     } else {
         // Wrap closure to detect reused generators
         /** @var \WeakMap<\Generator, list<Action>> $seenGenerators */
         $seenGenerators = new \WeakMap();
         $originalThen = $then;
         /**
-         * @param Message $message
+         * @param MessageInterface $message
          * @return iterable<Action>
          */
-        $wrappedThen = static function (Message $message) use ($seenGenerators, $originalThen): iterable {
+        $wrappedThen = static function (MessageInterface $message) use ($seenGenerators, $originalThen): iterable {
             $actions = $originalThen($message);
 
             // If it's a Generator, check if we've seen it before

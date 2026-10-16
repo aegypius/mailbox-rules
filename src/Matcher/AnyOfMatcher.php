@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Matcher;
 
-use DirectoryTree\ImapEngine\Message;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Matches messages when ANY provided matcher matches (logical OR).
@@ -23,7 +23,7 @@ final readonly class AnyOfMatcher implements Matcher
         $this->matchers = $matchers;
     }
 
-    public function matches(Message $message): bool
+    public function matches(MessageInterface $message): bool
     {
         return array_any($this->matchers, fn ($matcher) => $matcher->matches($message));
     }

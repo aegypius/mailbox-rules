@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Action;
 
-use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Action\CopyToFolder;
+use MailboxRules\Contract\MessageInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ final class CopyToFolderTest extends TestCase
 {
     public function testCopiesToSpecifiedFolder(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('copy')
             ->with('Archive');
@@ -25,7 +25,7 @@ final class CopyToFolderTest extends TestCase
 
     public function testCopiesWithDifferentFolderName(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('copy')
             ->with('Important/Projects');
@@ -34,34 +34,34 @@ final class CopyToFolderTest extends TestCase
         $copyToFolder($message);
     }
 
-    public function testEncodesAccentedCharactersToModifiedUtf7(): void
+    public function testPassesRawFolderNameWithAccentedCharacters(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('copy')
-            ->with('Copropri&AOk-t&AOk-');
+            ->with('Copropriété');
 
         $copyToFolder = new CopyToFolder('Copropriété');
         $copyToFolder($message);
     }
 
-    public function testEncodesCyrillicCharactersToModifiedUtf7(): void
+    public function testPassesRawFolderNameWithCyrillicCharacters(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('copy')
-            ->with('&BBoEPgRABDcEOAQ9BDA-');
+            ->with('Корзина');
 
         $copyToFolder = new CopyToFolder('Корзина');
         $copyToFolder($message);
     }
 
-    public function testEncodesAmpersandToModifiedUtf7(): void
+    public function testPassesRawFolderNameWithAmpersand(): void
     {
-        $message = $this->createMock(Message::class);
+        $message = $this->createMock(MessageInterface::class);
         $message->expects(self::once())
             ->method('copy')
-            ->with('Inbox &- Archive');
+            ->with('Inbox & Archive');
 
         $copyToFolder = new CopyToFolder('Inbox & Archive');
         $copyToFolder($message);
