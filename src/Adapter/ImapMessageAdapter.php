@@ -103,10 +103,7 @@ final readonly class ImapMessageAdapter implements MessageInterface
 
     public function copy(string $folder): void
     {
-        $mailbox = $this->message->folder()->mailbox();
-        if (!$mailbox->folders()->find($folder) instanceof FolderInterface) {
-            $mailbox->folders()->create($folder);
-        }
+        $this->ensureFolderExists($this->message->folder()->mailbox(), $folder);
         $this->message->copy(Str::toImapUtf7($folder));
     }
 

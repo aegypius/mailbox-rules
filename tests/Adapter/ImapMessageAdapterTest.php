@@ -247,6 +247,30 @@ final class ImapMessageAdapterTest extends TestCase
         (new ImapMessageAdapter($message))->move('Trash', true);
     }
 
+    public function testCopyCreatesMissingParentFolders(): void
+    {
+        $folders = $this->createMock(FolderRepository::class);
+        $folders->method('find')->willReturn(null);
+        $created = [];
+        $folders->expects(self::exactly(2))
+            ->method('create')
+            ->willReturnCallback(function (string $path) use (&$created): Folder {
+                $created[] = $path;
+                return $this->createStub(Folder::class);
+            });
+
+        $mailbox = $this->createStub(Mailbox::class);
+        $mailbox->method('folders')->willReturn($folders);
+
+        $message = $this->createMock(Message::class);
+        $message->method('folder')->willReturn($this->makeFolderWithMailbox($mailbox));
+        $message->expects(self::once())->method('copy');
+
+        (new ImapMessageAdapter($message))->copy('A/B');
+
+        self::assertSame(['A', 'A/B'], $created);
+    }
+
     public function testCopyCallsMessageCopyWithUtf7EncodedFolder(): void
     {
         $folders = $this->createStub(FolderRepository::class);
