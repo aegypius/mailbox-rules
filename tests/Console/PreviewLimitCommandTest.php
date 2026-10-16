@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Console;
 
-use DirectoryTree\ImapEngine\Collections\MessageCollection;
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\MessageQuery;
+use MailboxRules\Adapter\InMemoryMailbox;
 use MailboxRules\Console\ApplyCommand;
 use MailboxRules\Loader\RuleFileLoader;
-use MailboxRules\MailboxFactoryInterface;
-use MailboxRules\ValueObject\Dsn;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Tests\Support\InMemoryMailboxFactory;
 
 use function sys_get_temp_dir;
 use function tempnam;
@@ -24,7 +20,6 @@ use function unlink;
 final class PreviewLimitCommandTest extends TestCase
 {
     private string $tempFile = '';
-    public static Mailbox $mockMailbox;
 
     protected function tearDown(): void
     {
@@ -74,71 +69,34 @@ PHP
         $this->assertSame('10', $option->getDefault());
     }
 
-    public function testDryRunUsesCustomPreviewLimit(): void
+    private function previewCount(string $limit): int
     {
-        $mailbox = $this->createStub(Mailbox::class);
-        $folder = $this->createStub(Folder::class);
-        $query = $this->createMock(MessageQuery::class);
-
-        $mailbox->method('inbox')->willReturn($folder);
-        $folder->method('messages')->willReturn($query);
-        $query->method('withHeaders')->willReturn($query);
-        $query->expects($this->once())->method('limit')->with(25)->willReturn($query);
-        $query->method('get')->willReturn(new MessageCollection([]));
-
-        self::$mockMailbox = $mailbox;
-
-        $factory = new class() implements MailboxFactoryInterface {
-            public static function createMailbox(Dsn $dsn): Mailbox
-            {
-                return PreviewLimitCommandTest::$mockMailbox;
-            }
-        };
+        $mailbox = new InMemoryMailbox();
+        for ($i = 0; $i < 30; ++$i) {
+            $mailbox->deliver('INBOX', subject: 'm' . $i);
+        }
+        InMemoryMailboxFactory::$mailbox = $mailbox;
 
         $this->tempFile = $this->createTempRulesFile();
-        $command = new ApplyCommand(new RuleFileLoader(), $factory);
-        $tester = new CommandTester($command);
-
+        $tester = new CommandTester(new ApplyCommand(new RuleFileLoader(), new InMemoryMailboxFactory()));
         $tester->execute([
             'config' => $this->tempFile,
             '--dry-run' => true,
-            '--preview-limit' => '25',
+            '--preview-limit' => $limit,
         ]);
 
         $this->assertSame(0, $tester->getStatusCode());
+
+        return substr_count($tester->getDisplay(), 'Rule: Test Rule');
+    }
+
+    public function testDryRunUsesCustomPreviewLimit(): void
+    {
+        $this->assertSame(25, $this->previewCount('25'));
     }
 
     public function testDryRunWithZeroLimitFetchesAllMessages(): void
     {
-        $mailbox = $this->createStub(Mailbox::class);
-        $folder = $this->createStub(Folder::class);
-        $query = $this->createMock(MessageQuery::class);
-
-        $mailbox->method('inbox')->willReturn($folder);
-        $folder->method('messages')->willReturn($query);
-        $query->method('withHeaders')->willReturn($query);
-        $query->expects($this->never())->method('limit');
-        $query->method('get')->willReturn(new MessageCollection([]));
-
-        self::$mockMailbox = $mailbox;
-
-        $factory = new class() implements MailboxFactoryInterface {
-            public static function createMailbox(Dsn $dsn): Mailbox
-            {
-                return PreviewLimitCommandTest::$mockMailbox;
-            }
-        };
-
-        $this->tempFile = $this->createTempRulesFile();
-        $command = new ApplyCommand(new RuleFileLoader(), $factory);
-        $tester = new CommandTester($command);
-
-        $tester->execute([
-            'config' => $this->tempFile,
-            '--dry-run' => true,
-            '--preview-limit' => '0',
-        ]);
-
-        $this->assertSame(0, $tester->getStatusCode());
+        $this->assertSame(30, $this->previewCount('0'));
     }
 }

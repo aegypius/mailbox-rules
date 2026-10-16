@@ -90,6 +90,11 @@ final readonly class ImapMessageAdapter implements MessageInterface
         );
     }
 
+    public function uid(): int
+    {
+        return $this->message->uid();
+    }
+
     public function folderPath(): string
     {
         return $this->message->folder()->path();

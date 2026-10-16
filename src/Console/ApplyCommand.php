@@ -58,7 +58,7 @@ final class ApplyCommand extends Command
                 "watch",
                 null,
                 InputOption::VALUE_NONE,
-                "Watch mailbox for new messages and apply rules in real-time (IMAP IDLE)"
+                "Watch mailbox for new messages and apply rules in real-time"
             )
             ->addOption(
                 "preview-limit",

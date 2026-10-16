@@ -43,6 +43,8 @@ interface MessageInterface
      */
     public function attachments(): array;
 
+    public function uid(): int;
+
     public function folderPath(): string;
 
     public function move(string $folder, bool $expunge = false): void;

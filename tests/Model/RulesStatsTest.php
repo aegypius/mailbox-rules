@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Model;
 
-use DirectoryTree\ImapEngine\Collections\MessageCollection;
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\Message;
-use DirectoryTree\ImapEngine\MessageQuery;
 use MailboxRules\Action\LogAction;
+use MailboxRules\Adapter\InMemoryMailbox;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\Matcher;
@@ -26,17 +22,12 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RuleExecutionStats::class)]
 final class RulesStatsTest extends TestCase
 {
-    private function makeMailboxWithMessages(Message ...$messages): Mailbox
+    private function makeMailboxWithMessages(int $count = 0): InMemoryMailbox
     {
-        $query = $this->createStub(MessageQuery::class);
-        $query->method('withHeaders')->willReturn($query);
-        $query->method('get')->willReturn(new MessageCollection($messages));
-
-        $folder = $this->createStub(Folder::class);
-        $folder->method('messages')->willReturn($query);
-
-        $mailbox = $this->createStub(Mailbox::class);
-        $mailbox->method('inbox')->willReturn($folder);
+        $mailbox = new InMemoryMailbox();
+        for ($i = 0; $i < $count; ++$i) {
+            $mailbox->deliver('INBOX');
+        }
 
         return $mailbox;
     }
@@ -53,9 +44,7 @@ final class RulesStatsTest extends TestCase
     #[Test]
     public function stats_tracks_rule_evaluation_count(): void
     {
-        $msg1 = $this->createStub(Message::class);
-        $msg2 = $this->createStub(Message::class);
-        $mailbox = $this->makeMailboxWithMessages($msg1, $msg2);
+        $mailbox = $this->makeMailboxWithMessages(2);
 
         $rule = new Rule('Count Test', new AnyMatcher(), static fn (MessageInterface $m): iterable => yield new LogAction());
         $rules = new Rules($mailbox, [$rule]);
@@ -70,9 +59,7 @@ final class RulesStatsTest extends TestCase
     #[Test]
     public function stats_tracks_match_count(): void
     {
-        $msg1 = $this->createStub(Message::class);
-        $msg2 = $this->createStub(Message::class);
-        $mailbox = $this->makeMailboxWithMessages($msg1, $msg2);
+        $mailbox = $this->makeMailboxWithMessages(2);
 
         $neverMatcher = $this->createStub(Matcher::class);
         $neverMatcher->method('matches')->willReturn(false);
@@ -98,8 +85,7 @@ final class RulesStatsTest extends TestCase
     #[Test]
     public function stats_tracks_action_count(): void
     {
-        $message = $this->createStub(Message::class);
-        $mailbox = $this->makeMailboxWithMessages($message);
+        $mailbox = $this->makeMailboxWithMessages(1);
 
         $rule = new Rule(
             'Multi Action',
@@ -121,17 +107,7 @@ final class RulesStatsTest extends TestCase
     #[Test]
     public function stats_resets_between_apply_calls(): void
     {
-        $message = $this->createStub(Message::class);
-
-        $query = $this->createStub(MessageQuery::class);
-        $query->method('withHeaders')->willReturn($query);
-        $query->method('get')->willReturn(new MessageCollection([$message]));
-
-        $folder = $this->createStub(Folder::class);
-        $folder->method('messages')->willReturn($query);
-
-        $mailbox = $this->createStub(Mailbox::class);
-        $mailbox->method('inbox')->willReturn($folder);
+        $mailbox = $this->makeMailboxWithMessages(1);
 
         $rule = new Rule('Test', new AnyMatcher(), static fn (MessageInterface $m): iterable => yield new LogAction());
         $collector = new StatsCollector();
@@ -149,8 +125,7 @@ final class RulesStatsTest extends TestCase
     #[Test]
     public function stats_tracks_matcher_time_as_non_negative_float(): void
     {
-        $message = $this->createStub(Message::class);
-        $mailbox = $this->makeMailboxWithMessages($message);
+        $mailbox = $this->makeMailboxWithMessages(1);
 
         $rule = new Rule('Timed Rule', new AnyMatcher(), static fn (MessageInterface $m): iterable => yield new LogAction());
         $rules = new Rules($mailbox, [$rule]);
@@ -163,8 +138,7 @@ final class RulesStatsTest extends TestCase
     #[Test]
     public function stats_tracks_failure_count_when_action_throws(): void
     {
-        $message = $this->createStub(Message::class);
-        $mailbox = $this->makeMailboxWithMessages($message);
+        $mailbox = $this->makeMailboxWithMessages(1);
 
         $rule = new Rule(
             'Failing Rule',
@@ -193,8 +167,7 @@ final class RulesStatsTest extends TestCase
     #[Test]
     public function stats_returns_one_entry_per_rule(): void
     {
-        $message = $this->createStub(Message::class);
-        $mailbox = $this->makeMailboxWithMessages($message);
+        $mailbox = $this->makeMailboxWithMessages(1);
 
         $rules = new Rules($mailbox, [
             new Rule('Rule A', new AnyMatcher(), static fn (MessageInterface $m): iterable => yield new LogAction()),

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace MailboxRules\Model;
 
-use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\Message;
-use MailboxRules\Adapter\ImapMessageAdapter;
+use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Helper\FolderExtractor;
 use Psr\Log\LoggerInterface;
@@ -20,7 +18,7 @@ final readonly class Rules
      * @param iterable<Rule> $rules
      */
     public function __construct(
-        private Mailbox $mailbox,
+        private MailboxInterface $mailbox,
         private iterable $rules,
         private LoggerInterface $logger = new NullLogger(),
         private StatsCollector $statsCollector = new StatsCollector(),
@@ -43,6 +41,7 @@ final readonly class Rules
         return [
             Parameter::typed(MessageInterface::class, $message),
             Parameter::typed(LoggerInterface::class, $this->logger),
+            Parameter::typed(MailboxInterface::class, $this->mailbox),
         ];
     }
 
@@ -124,81 +123,67 @@ final readonly class Rules
     public function apply(): void
     {
         $this->statsCollector->reset();
-        $this->logger->debug('Connecting to mailbox...');
-        $this->mailbox->connect();
+        $this->processFolders($this->groupRulesByFolder(), []);
+        $this->logger->debug('Done processing messages');
+    }
 
-        // Group rules by folder to optimize IMAP queries
+    /**
+     * Apply once, then re-poll every folder for messages above the highest UID seen.
+     *
+     * @param int|null $passes Stop after this many passes; null runs forever.
+     */
+    public function watch(int $interval = 60, ?int $passes = null): void
+    {
+        $this->statsCollector->reset();
         $rulesByFolder = $this->groupRulesByFolder();
+        $marks = [];
+
+        for ($pass = 0; $passes === null || $pass < $passes; $pass++) {
+            if ($pass > 0) {
+                sleep($interval);
+            }
+            $marks = $this->processFolders($rulesByFolder, $pass === 0 ? [] : $marks);
+        }
+    }
+
+    /**
+     * @param array<string, list<Rule>> $rulesByFolder
+     * @param array<string, int> $afterUids highest UID seen per folder; empty means everything
+     * @return array<string, int> highest UID seen per folder
+     */
+    private function processFolders(array $rulesByFolder, array $afterUids): array
+    {
+        $marks = $afterUids;
+        $existing = $this->mailbox->folders();
 
         foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
-            // Decode the special inbox key
-            $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
-            $folderLabel = $actualPath ?? 'INBOX';
+            $actualPath = $folderPath === '__INBOX__' ? 'INBOX' : $folderPath;
 
-            $this->logger->info('Processing folder: {folder}', [
-                'folder' => $folderLabel,
-            ]);
-
-            // Get folder and messages
-            $folder = $actualPath === null
-                ? $this->mailbox->inbox()
-                : $this->mailbox->folders()->find($actualPath);
-
-            if ($folder === null) {
+            if (!in_array($actualPath, $existing, true)) {
                 $this->logger->warning('Folder not found: {folder}, skipping rules', [
                     'folder' => $actualPath,
                 ]);
                 continue;
             }
 
-            $messages = $folder->messages()->withHeaders()->get();
-            $messageCount = count($messages);
+            $this->logger->info('Processing folder: {folder}', [
+                'folder' => $actualPath,
+            ]);
+
+            $messages = $this->mailbox->messages($actualPath, $afterUids[$actualPath] ?? null);
 
             $this->logger->info('Found {messages_count} message(s) in {folder}', [
-                'messages_count' => $messageCount,
-                'folder' => $folderLabel,
+                'messages_count' => count($messages),
+                'folder' => $actualPath,
             ]);
 
-            // Apply only the rules for this folder
             foreach ($messages as $message) {
-                assert($message instanceof Message);
-                $this->doApplyRules(new ImapMessageAdapter($message), $rulesForFolder);
+                $marks[$actualPath] = max($marks[$actualPath] ?? 0, $message->uid());
+                $this->doApplyRules($message, $rulesForFolder);
             }
         }
 
-        $this->logger->debug('Done processing messages');
-    }
-
-    public function watch(): void
-    {
-        $this->statsCollector->reset();
-        $this->mailbox->connect();
-
-        $rulesByFolder = $this->groupRulesByFolder();
-
-        foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
-            $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
-            $folderLabel = $actualPath ?? 'INBOX';
-
-            $folder = $actualPath === null
-                ? $this->mailbox->inbox()
-                : $this->mailbox->folders()->find($actualPath);
-
-            if ($folder === null) {
-                $this->logger->warning('Folder not found: {folder}, skipping watch', [
-                    'folder' => $actualPath,
-                ]);
-                continue;
-            }
-
-            $this->logger->info('Watching folder: {folder}', [
-                'folder' => $folderLabel,
-            ]);
-
-            $folder->idle(function (Message $message) use ($rulesForFolder): void {
-                $this->doApplyRules(new ImapMessageAdapter($message), $rulesForFolder);
-            });
-        }
+        return $marks;
     }
 
     /**
@@ -210,52 +195,30 @@ final readonly class Rules
      */
     public function preview(int $limit = 10): array
     {
-        $this->mailbox->connect();
-
-        // Group rules by folder to optimize IMAP queries
-        $rulesByFolder = $this->groupRulesByFolder();
+        $existing = $this->mailbox->folders();
         $results = [];
 
-        foreach ($rulesByFolder as $folderPath => $rulesForFolder) {
-            // Decode the special inbox key
-            $actualPath = $folderPath === '__INBOX__' ? null : $folderPath;
+        foreach ($this->groupRulesByFolder() as $folderPath => $rulesForFolder) {
+            $actualPath = $folderPath === '__INBOX__' ? 'INBOX' : $folderPath;
 
-            // Get folder and messages
-            $folder = $actualPath === null
-                ? $this->mailbox->inbox()
-                : $this->mailbox->folders()->find($actualPath);
-
-            if ($folder === null) {
+            if (!in_array($actualPath, $existing, true)) {
                 continue;
             }
 
-            $messageQuery = $folder->messages()->withHeaders();
-
+            $messages = $this->mailbox->messages($actualPath);
             if ($limit > 0) {
-                $messageQuery = $messageQuery->limit($limit);
+                $messages = array_slice($messages, 0, $limit);
             }
 
-            foreach ($messageQuery->get() as $message) {
-                assert($message instanceof Message);
-                $adapter = new ImapMessageAdapter($message);
-
-                // Only check rules for this folder
+            foreach ($messages as $message) {
                 foreach ($rulesForFolder as $rule) {
-                    // Evaluate the rule to get actions (but don't execute them)
-                    $actions = $rule($adapter);
-                    $actionsList = [];
+                    $actions = $rule($message);
 
-                    // Collect actions without executing
-                    foreach ($actions as $action) {
-                        $actionsList[] = $action;
-                    }
-
-                    // Only add result if rule matched (has actions)
-                    if ($actionsList !== []) {
+                    if ($actions !== []) {
                         $results[] = new PreviewResult(
-                            message: $adapter,
+                            message: $message,
                             ruleName: $rule->name,
-                            actions: $actionsList,
+                            actions: $actions,
                         );
                     }
                 }

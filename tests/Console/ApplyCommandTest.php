@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Console;
 
-use DirectoryTree\ImapEngine\Collections\MessageCollection;
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\Message;
-use DirectoryTree\ImapEngine\MessageQuery;
+use MailboxRules\Adapter\InMemoryMailbox;
 use MailboxRules\Console\ApplyCommand;
 use MailboxRules\Loader\RuleFileLoader;
-use MailboxRules\MailboxFactoryInterface;
-use MailboxRules\ValueObject\Dsn;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Tests\Support\InMemoryMailboxFactory;
 
 use function sys_get_temp_dir;
 use function unlink;
@@ -24,7 +19,6 @@ use function unlink;
 class ApplyCommandTest extends TestCase
 {
     private string $tempFile = '';
-    public static Mailbox $mockMailbox;
 
     protected function tearDown(): void
     {
@@ -34,21 +28,16 @@ class ApplyCommandTest extends TestCase
     }
 
     /**
-     * @param list<Message> $messages
+     * @param list<?string> $subjects
      * @return array{tempFile: string, command: ApplyCommand}
      */
-    private function createTempRulesFileAndCommand(array $messages): array
+    private function createTempRulesFileAndCommand(array $subjects): array
     {
-        $mailbox = $this->createMock(Mailbox::class);
-        $folder = $this->createMock(Folder::class);
-        $query = $this->createMock(MessageQuery::class);
-
-        $mailbox->expects($this->once())->method('connect');
-        $mailbox->expects($this->once())->method('inbox')->willReturn($folder);
-        $folder->expects($this->once())->method('messages')->willReturn($query);
-        $query->expects($this->once())->method('withHeaders')->willReturn($query);
-        $query->expects($this->once())->method('limit')->with(10)->willReturn($query);
-        $query->expects($this->once())->method('get')->willReturn(new MessageCollection($messages));
+        $mailbox = new InMemoryMailbox();
+        foreach ($subjects as $subject) {
+            $mailbox->deliver('INBOX', subject: $subject);
+        }
+        InMemoryMailboxFactory::$mailbox = $mailbox;
 
         $tempFile = tempnam(sys_get_temp_dir(), 'rules_') . '.php';
         file_put_contents(
@@ -73,16 +62,7 @@ return new MailboxConfiguration(
 PHP
         );
 
-        // Store mock mailbox in static property for factory to return
-        self::$mockMailbox = $mailbox;
-
-        // Create anonymous class that implements the interface
-        $factoryInstance = new class() implements MailboxFactoryInterface {
-            public static function createMailbox(Dsn $dsn): Mailbox
-            {
-                return ApplyCommandTest::$mockMailbox;
-            }
-        };
+        $factoryInstance = new InMemoryMailboxFactory();
 
         // Create command with mock factory instance
         $command = new ApplyCommand(new RuleFileLoader(), $factoryInstance);
@@ -110,10 +90,7 @@ PHP
 
     public function testDryRunDisplaysPreviewResults(): void
     {
-        $message = $this->createStub(Message::class);
-        $message->method('subject')->willReturn('Test Subject');
-
-        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand([$message]);
+        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand(['Test Subject']);
 
         $commandTester = new CommandTester($applyCommand);
 
@@ -132,10 +109,7 @@ PHP
 
     public function testDryRunHandlesNoSubject(): void
     {
-        $message = $this->createStub(Message::class);
-        $message->method('subject')->willReturn(null);
-
-        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand([$message]);
+        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand([null]);
 
         $commandTester = new CommandTester($applyCommand);
 

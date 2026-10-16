@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use DirectoryTree\ImapEngine\Mailbox;
 use MailboxRules\Action\MoveToFolder;
+use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
 
@@ -12,7 +12,7 @@ if (!isset($GLOBALS['test_mailbox'])) {
 }
 
 $mailbox = $GLOBALS['test_mailbox'];
-assert($mailbox instanceof Mailbox);
+assert($mailbox instanceof MailboxInterface);
 
 $rule = new Rule(
     name: 'Test Rule',

@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Console;
 
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\Mailbox;
 use MailboxRules\Console\ApplyCommand;
-use MailboxRules\Loader\RuleFileLoader;
-use MailboxRules\MailboxFactoryInterface;
-use MailboxRules\ValueObject\Dsn;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -22,7 +17,6 @@ use function unlink;
 final class WatchCommandTest extends TestCase
 {
     private string $tempFile = '';
-    public static Mailbox $mockMailbox;
 
     protected function tearDown(): void
     {
@@ -64,40 +58,6 @@ PHP
         $command = new ApplyCommand();
 
         $this->assertTrue($command->getDefinition()->hasOption('watch'));
-    }
-
-    public function testWatchInvokesIdleOnInbox(): void
-    {
-        $mailbox = $this->createMock(Mailbox::class);
-        $inbox = $this->createMock(Folder::class);
-
-        $mailbox->expects($this->once())->method('connect');
-        $mailbox->expects($this->once())->method('inbox')->willReturn($inbox);
-
-        // idle() should be called (watch mode), not messages()->get()
-        $inbox->expects($this->once())
-            ->method('idle')
-            ->with($this->isCallable());
-
-        self::$mockMailbox = $mailbox;
-
-        $factory = new class() implements MailboxFactoryInterface {
-            public static function createMailbox(Dsn $dsn): Mailbox
-            {
-                return WatchCommandTest::$mockMailbox;
-            }
-        };
-
-        $this->tempFile = $this->createTempRulesFile();
-        $command = new ApplyCommand(new RuleFileLoader(), $factory);
-        $tester = new CommandTester($command);
-
-        $tester->execute([
-            'config' => $this->tempFile,
-            '--watch' => true,
-        ]);
-
-        $this->assertSame(0, $tester->getStatusCode());
     }
 
     public function testWatchAndDryRunAreIncompatible(): void

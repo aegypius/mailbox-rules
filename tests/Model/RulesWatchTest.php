@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Model;
 
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\FolderRepository;
-use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\Message;
-use MailboxRules\Action;
-use MailboxRules\Action\LogAction;
+use MailboxRules\Action\Flag;
+use MailboxRules\Adapter\InMemoryMailbox;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AllOfMatcher;
+use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\FolderMatcher;
-use MailboxRules\Matcher\SubjectMatcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -23,111 +19,69 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Rules::class)]
 final class RulesWatchTest extends TestCase
 {
-    #[Test]
-    public function watch_uses_folder_scoped_idle_when_rule_targets_specific_folder(): void
+    /**
+     * @return array{Rule, \ArrayObject<int, ?string>} Rule recording every subject it ran on.
+     */
+    private function recordingRule(?\Closure $onMessage = null): array
     {
+        /** @var \ArrayObject<int, ?string> $seen */
+        $seen = new \ArrayObject();
         $rule = new Rule(
-            name: 'Watch Free folder',
-            matcher: new AllOfMatcher(
-                new FolderMatcher('Free'),
-                new SubjectMatcher('facture')
-            ),
-            then: static function (MessageInterface $m): iterable { yield new LogAction(); }
+            'Record',
+            new AnyMatcher(),
+            static function (MessageInterface $m) use ($seen, $onMessage): iterable {
+                $seen[] = $m->subject();
+                if ($onMessage !== null) {
+                    $onMessage($m);
+                }
+                yield new Flag();
+            },
         );
 
-        $mailbox = $this->createMock(Mailbox::class);
-        $folders = $this->createMock(FolderRepository::class);
-        $freeFolder = $this->createMock(Folder::class);
-
-        $mailbox->expects($this->once())->method('connect');
-
-        // Should resolve the "Free" folder, not inbox()
-        $mailbox->expects($this->once())
-            ->method('folders')
-            ->willReturn($folders);
-
-        $folders->expects($this->once())
-            ->method('find')
-            ->with('Free')
-            ->willReturn($freeFolder);
-
-        // watch() must NOT fall back to inbox() when a folder-scoped rule exists
-        $mailbox->expects($this->never())->method('inbox');
-
-        // idle() should be called on the targeted folder
-        $freeFolder->expects($this->once())
-            ->method('idle')
-            ->with($this->isCallable());
-
-        $rules = new Rules($mailbox, [$rule]);
-        $rules->watch();
+        return [$rule, $seen];
     }
 
     #[Test]
-    public function watch_uses_inbox_idle_when_no_folder_matcher_present(): void
+    public function the_first_pass_applies_rules_to_existing_messages(): void
     {
-        $rule = new Rule(
-            name: 'Watch inbox',
-            matcher: new \MailboxRules\Matcher\AnyMatcher(),
-            then: static function (MessageInterface $m): iterable { yield new LogAction(); }
-        );
+        $mailbox = new InMemoryMailbox();
+        $mailbox->deliver('INBOX', subject: 'old');
+        [$rule, $seen] = $this->recordingRule();
 
-        $mailbox = $this->createMock(Mailbox::class);
-        $inbox = $this->createMock(Folder::class);
+        (new Rules($mailbox, [$rule]))->watch(interval: 0, passes: 1);
 
-        $mailbox->expects($this->once())->method('connect');
-
-        // When no folder scope, inbox() should be used
-        $mailbox->expects($this->once())
-            ->method('inbox')
-            ->willReturn($inbox);
-
-        $mailbox->expects($this->never())->method('folders');
-
-        $inbox->expects($this->once())
-            ->method('idle')
-            ->with($this->isCallable());
-
-        $rules = new Rules($mailbox, [$rule]);
-        $rules->watch();
+        self::assertSame(['old'], $seen->getArrayCopy());
     }
 
     #[Test]
-    public function watch_idle_callback_applies_rules_to_received_message(): void
+    public function later_passes_only_run_rules_on_newly_arrived_messages(): void
     {
-        $action = new class() implements Action {
-            public bool $invoked = false;
-
-            public function __invoke(MessageInterface $message): void
-            {
-                $this->invoked = true;
+        $mailbox = new InMemoryMailbox();
+        $mailbox->deliver('INBOX', subject: 'old');
+        $delivered = false;
+        [$rule, $seen] = $this->recordingRule(static function () use ($mailbox, &$delivered): void {
+            if (!$delivered) {
+                $delivered = true;
+                $mailbox->deliver('INBOX', subject: 'new');
             }
-        };
+        });
 
-        $rule = new Rule(
-            name: 'Inbox rule',
-            matcher: new \MailboxRules\Matcher\AnyMatcher(),
-            then: static function (MessageInterface $message) use ($action): iterable {
-                yield $action;
-            }
-        );
+        (new Rules($mailbox, [$rule]))->watch(interval: 0, passes: 3);
 
-        $mailbox = $this->createStub(Mailbox::class);
-        $inbox = $this->createMock(Folder::class);
-        $message = $this->createStub(Message::class);
+        self::assertSame(['old', 'new'], $seen->getArrayCopy());
+    }
 
-        $mailbox->method('inbox')->willReturn($inbox);
+    #[Test]
+    public function watch_targets_the_rules_folder_scope(): void
+    {
+        $mailbox = new InMemoryMailbox('Free');
+        $free = $mailbox->deliver('Free');
+        $inbox = $mailbox->deliver('INBOX');
+        $rule = new Rule('Free', new AllOfMatcher(new FolderMatcher('Free')), static fn () => yield new Flag());
 
-        // Capture the callable passed to idle() and invoke it immediately with a message
-        $inbox->expects($this->once())
-            ->method('idle')
-            ->willReturnCallback(function (callable $callback) use ($message): void {
-                $callback($message);
-            });
+        (new Rules($mailbox, [$rule]))->watch(interval: 0, passes: 1);
 
-        $rules = new Rules($mailbox, [$rule]);
-        $rules->watch();
-
-        $this->assertTrue($action->invoked, 'Action should be executed when idle callback fires');
+        self::assertTrue($free->isFlagged());
+        self::assertFalse($inbox->isFlagged());
     }
 }
