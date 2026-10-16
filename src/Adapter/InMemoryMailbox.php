@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace MailboxRules\Adapter;
 
 use Carbon\CarbonInterface;
-use DirectoryTree\ImapEngine\Address;
 use MailboxRules\Contract\MailboxInterface;
+use MailboxRules\ValueObject\EmailAddress;
 
 final class InMemoryMailbox implements MailboxInterface
 {
@@ -42,7 +42,7 @@ final class InMemoryMailbox implements MailboxInterface
     public function deliver(
         string $folder,
         ?string $subject = null,
-        ?Address $from = null,
+        ?EmailAddress $from = null,
         ?string $text = null,
         ?int $size = null,
         ?CarbonInterface $date = null,

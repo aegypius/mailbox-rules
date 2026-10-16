@@ -71,6 +71,14 @@ final class Traversal
             }
 
             foreach ($scope as $folder) {
+                if (!in_array($folder, $existing, true)) {
+                    $this->logger->warning('Folder not found: {folder}, skipping rule: {rule}', [
+                        'folder' => $folder,
+                        'rule' => $rule->name,
+                    ]);
+                    continue;
+                }
+
                 $rulesByFolder[$folder][] = $rule;
             }
         }

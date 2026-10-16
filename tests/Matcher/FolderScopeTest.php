@@ -75,4 +75,10 @@ final class FolderScopeTest extends TestCase
         self::assertSame(['INBOX'], (new NotMatcher(new FolderMatcher('Work')))->folderScope(self::FOLDERS));
         self::assertNull((new NotMatcher(new FromMatcher('a@b.c')))->folderScope(self::FOLDERS));
     }
+
+    #[Test]
+    public function anyOfWithNoMatchingFolderIsEmptyNotDefault(): void
+    {
+        self::assertSame([], (new AnyOfMatcher(new FolderMatcher('nomatch')))->folderScope(self::FOLDERS));
+    }
 }

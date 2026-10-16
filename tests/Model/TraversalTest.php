@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace Tests\Model;
 
 use MailboxRules\Adapter\InMemoryMailbox;
+use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
+use MailboxRules\Matcher\AnyOfMatcher;
 use MailboxRules\Matcher\FolderMatcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Traversal;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 #[CoversClass(Traversal::class)]
 final class TraversalTest extends TestCase
@@ -135,5 +138,35 @@ final class TraversalTest extends TestCase
         $traversal->poll($step);
 
         self::assertSame(['Later:x:R'], $visits->getArrayCopy());
+    }
+
+    #[Test]
+    public function an_anyOf_without_matching_folder_is_skipped_with_a_warning(): void
+    {
+        $mailbox = new InMemoryMailbox();
+        $mailbox->deliver('INBOX', subject: 'a');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::once())->method('warning')
+            ->with(self::stringContains('No folder in scope'));
+        [$step, $visits] = $this->recorder();
+        $rule = new Rule('R', new AnyOfMatcher(new FolderMatcher('nomatch')), static fn (): iterable => []);
+
+        (new Traversal($mailbox, [$rule], $logger))->pass($step);
+
+        self::assertSame([], $visits->getArrayCopy());
+    }
+
+    #[Test]
+    public function a_missing_inbox_is_skipped_with_a_warning(): void
+    {
+        $mailbox = $this->createMock(MailboxInterface::class);
+        $mailbox->method('folders')->willReturn(['Work']);
+        $mailbox->expects(self::never())->method('messages');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::once())->method('warning')
+            ->with(self::stringContains('not found'));
+        [$step] = $this->recorder();
+
+        (new Traversal($mailbox, [$this->rule('R')], $logger))->pass($step);
     }
 }

@@ -2,19 +2,18 @@
 
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Address;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\BccMatcher;
+use MailboxRules\ValueObject\EmailAddress;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(BccMatcher::class)]
 final class BccMatcherTest extends TestCase
 {
-    private function createAddress(string $email): Address
+    private function createAddress(string $email): EmailAddress
     {
-        $address = $this->createStub(Address::class);
-        $address->method('email')->willReturn($email);
+        $address = new EmailAddress($email);
 
         return $address;
     }

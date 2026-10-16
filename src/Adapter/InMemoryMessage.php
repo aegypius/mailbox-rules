@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace MailboxRules\Adapter;
 
 use Carbon\CarbonInterface;
-use DirectoryTree\ImapEngine\Address;
 use MailboxRules\Contract\MessageInterface;
+use MailboxRules\ValueObject\EmailAddress;
 
 final class InMemoryMessage implements MessageInterface
 {
@@ -22,7 +22,7 @@ final class InMemoryMessage implements MessageInterface
         private readonly InMemoryMailbox $mailbox,
         private string $folder,
         private readonly ?string $subject = null,
-        private readonly ?Address $from = null,
+        private readonly ?EmailAddress $from = null,
         private readonly ?string $text = null,
         private readonly ?int $size = null,
         private readonly ?CarbonInterface $date = null,
@@ -53,7 +53,7 @@ final class InMemoryMessage implements MessageInterface
         return $this->deleted;
     }
 
-    public function from(): ?Address
+    public function from(): ?EmailAddress
     {
         return $this->from;
     }

@@ -137,9 +137,7 @@ final readonly class Rules
 
         $this->traversal->pass(function (MessageInterface $message, array $rules) use (&$results): void {
             foreach ($rules as $rule) {
-                $startTimeNs = hrtime(true);
                 $actions = $rule($message);
-                $this->recordStats($rule->name, $actions !== [], 0, 0, $startTimeNs);
 
                 if ($actions !== []) {
                     $results[] = new PreviewResult(message: $message, ruleName: $rule->name, actions: $actions);

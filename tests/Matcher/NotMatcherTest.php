@@ -7,6 +7,7 @@ namespace Tests\Matcher;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Matcher\NotMatcher;
+use MailboxRules\ValueObject\EmailAddress;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -106,8 +107,7 @@ final class NotMatcherTest extends TestCase
     private function createMessageFrom(string $email): MessageInterface
     {
         $message = $this->createStub(MessageInterface::class);
-        $address = $this->createStub(\DirectoryTree\ImapEngine\Address::class);
-        $address->method('email')->willReturn($email);
+        $address = new EmailAddress($email);
         $message->method('from')->willReturn($address);
 
         return $message;

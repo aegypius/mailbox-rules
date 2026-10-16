@@ -102,4 +102,13 @@ class RulesPreviewTest extends TestCase
 
         $this->assertCount(2, $results);
     }
+
+    public function testPreviewRecordsNoStats(): void
+    {
+        $rules = new Rules($this->mailbox(), [new Rule('R', new AnyMatcher(), static fn () => yield new Flag())]);
+
+        $rules->preview();
+
+        $this->assertSame([], $rules->stats());
+    }
 }

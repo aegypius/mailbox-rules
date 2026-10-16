@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Address;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\Matcher;
+use MailboxRules\ValueObject\EmailAddress;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -93,11 +93,9 @@ final class AllOfMatcherTest extends TestCase
     #[Test]
     public function it_works_with_real_matchers(): void
     {
-        $fromAddress = $this->createStub(Address::class);
-        $fromAddress->method('email')->willReturn('sender@example.com');
+        $fromAddress = new EmailAddress('sender@example.com');
 
-        $toAddress = $this->createStub(Address::class);
-        $toAddress->method('email')->willReturn('recipient@example.com');
+        $toAddress = new EmailAddress('recipient@example.com');
 
         $message = $this->createStub(MessageInterface::class);
         $message->method('from')->willReturn($fromAddress);
@@ -116,11 +114,9 @@ final class AllOfMatcherTest extends TestCase
     #[Test]
     public function it_does_not_match_when_one_real_matcher_fails(): void
     {
-        $fromAddress = $this->createStub(Address::class);
-        $fromAddress->method('email')->willReturn('sender@example.com');
+        $fromAddress = new EmailAddress('sender@example.com');
 
-        $toAddress = $this->createStub(Address::class);
-        $toAddress->method('email')->willReturn('recipient@example.com');
+        $toAddress = new EmailAddress('recipient@example.com');
 
         $message = $this->createStub(MessageInterface::class);
         $message->method('from')->willReturn($fromAddress);

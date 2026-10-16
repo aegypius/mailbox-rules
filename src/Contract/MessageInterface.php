@@ -5,24 +5,24 @@ declare(strict_types=1);
 namespace MailboxRules\Contract;
 
 use Carbon\CarbonInterface;
-use DirectoryTree\ImapEngine\Address;
+use MailboxRules\ValueObject\EmailAddress;
 
 interface MessageInterface
 {
-    public function from(): ?Address;
+    public function from(): ?EmailAddress;
 
     /**
-     * @return array<Address>
+     * @return array<EmailAddress>
      */
     public function to(): array;
 
     /**
-     * @return array<Address>
+     * @return array<EmailAddress>
      */
     public function cc(): array;
 
     /**
-     * @return array<Address>
+     * @return array<EmailAddress>
      */
     public function bcc(): array;
 

@@ -2,19 +2,18 @@
 
 namespace Tests\Matcher;
 
-use DirectoryTree\ImapEngine\Address;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\RecipientMatcher;
+use MailboxRules\ValueObject\EmailAddress;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(RecipientMatcher::class)]
 final class RecipientMatcherTest extends TestCase
 {
-    private function createAddress(string $email): Address
+    private function createAddress(string $email): EmailAddress
     {
-        $address = $this->createStub(Address::class);
-        $address->method('email')->willReturn($email);
+        $address = new EmailAddress($email);
 
         return $address;
     }
