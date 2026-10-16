@@ -2,22 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Tests\Model;
+namespace Tests\Service;
 
 use MailboxRules\Action\Flag;
 use MailboxRules\Adapter\InMemoryMailbox;
+use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
+use MailboxRules\MailboxFactoryInterface;
 use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\FolderMatcher;
 use MailboxRules\Model\Rule;
-use MailboxRules\Model\Rules;
+use MailboxRules\Service\MailboxProcessor;
+use MailboxRules\ValueObject\Dsn;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Rules::class)]
-final class RulesWatchTest extends TestCase
+use function MailboxRules\mailbox;
+
+#[CoversClass(MailboxProcessor::class)]
+final class MailboxProcessorWatchTest extends TestCase
 {
     /**
      * @return array{Rule, \ArrayObject<int, ?string>} Rule recording every subject it ran on.
@@ -48,7 +53,7 @@ final class RulesWatchTest extends TestCase
         $mailbox->deliver('INBOX', subject: 'old');
         [$rule, $seen] = $this->recordingRule();
 
-        (new Rules($mailbox, [$rule]))->watch(interval: 0, passes: 1);
+        $this->watch($mailbox, $rule, 1);
 
         self::assertSame(['old'], $seen->getArrayCopy());
     }
@@ -66,7 +71,7 @@ final class RulesWatchTest extends TestCase
             }
         });
 
-        (new Rules($mailbox, [$rule]))->watch(interval: 0, passes: 3);
+        $this->watch($mailbox, $rule, 3);
 
         self::assertSame(['old', 'new'], $seen->getArrayCopy());
     }
@@ -79,24 +84,30 @@ final class RulesWatchTest extends TestCase
         $inbox = $mailbox->deliver('INBOX');
         $rule = new Rule('Free', new AllOfMatcher(new FolderMatcher('Free')), static fn () => yield new Flag());
 
-        (new Rules($mailbox, [$rule]))->watch(interval: 0, passes: 1);
+        $this->watch($mailbox, $rule, 1);
 
         self::assertTrue($free->isFlagged());
         self::assertFalse($inbox->isFlagged());
     }
 
-    #[Test]
-    public function watch_all_covers_every_mailbox_in_one_loop(): void
+    private function watch(InMemoryMailbox $mailbox, Rule $rule, int $passes): void
     {
-        $first = new InMemoryMailbox();
-        $second = new InMemoryMailbox();
-        $a = $first->deliver('INBOX');
-        $b = $second->deliver('INBOX');
-        $rule = new Rule('Flag', new AnyMatcher(), static fn () => yield new Flag());
+        $factory = new class() implements MailboxFactoryInterface {
+            public static InMemoryMailbox $mailbox;
 
-        Rules::watchAll([new Rules($first, [$rule]), new Rules($second, [$rule])], interval: 0, passes: 2);
+            public static function createMailbox(Dsn $dsn): MailboxInterface
+            {
+                return self::$mailbox;
+            }
+        };
+        $factory::$mailbox = $mailbox;
 
-        self::assertTrue($a->isFlagged());
-        self::assertTrue($b->isFlagged());
+        (new MailboxProcessor($factory))->watch(
+            [mailbox('imap://u:p@localhost:993/INBOX', [$rule])],
+            interval: 0,
+            onPass: static function (): void {
+            },
+            passes: $passes,
+        );
     }
 }

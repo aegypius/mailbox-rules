@@ -97,7 +97,7 @@ final class RulesProgressReportingTest extends TestCase
         $handler = new TestHandler();
         $logger = new Logger('test', [$handler]);
 
-        (new Rules(new InMemoryMailbox(), [$this->rule()], $logger))->watch(interval: 0, passes: 1);
+        (new Rules(new InMemoryMailbox(), [$this->rule()], $logger))->poll();
 
         self::assertContains('INBOX', $this->contexts($handler, Level::Info, 'folder'));
     }

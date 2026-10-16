@@ -122,4 +122,32 @@ PHP
         $this->assertStringContainsString('Message: (no subject)', $output);
         $this->assertSame(0, $commandTester->getStatusCode());
     }
+
+    public function testApplyPrintsStatsSummary(): void
+    {
+        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand(['a', 'b']);
+
+        $commandTester = new CommandTester($applyCommand);
+        $commandTester->execute([
+            'config' => $this->tempFile,
+        ]);
+
+        $this->assertStringContainsString(
+            'Test Rule: 2 evaluated, 2 matched, 2 action(s), 0 failure(s)',
+            $commandTester->getDisplay()
+        );
+    }
+
+    public function testDryRunPrintsNoStats(): void
+    {
+        ['tempFile' => $this->tempFile, 'command' => $applyCommand] = $this->createTempRulesFileAndCommand(['a']);
+
+        $commandTester = new CommandTester($applyCommand);
+        $commandTester->execute([
+            'config' => $this->tempFile,
+            '--dry-run' => true,
+        ]);
+
+        $this->assertStringNotContainsString('evaluated', $commandTester->getDisplay());
+    }
 }

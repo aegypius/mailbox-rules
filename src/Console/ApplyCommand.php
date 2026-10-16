@@ -7,7 +7,7 @@ namespace MailboxRules\Console;
 use MailboxRules\Loader\RuleFileLoader;
 use MailboxRules\MailboxFactory;
 use MailboxRules\MailboxFactoryInterface;
-use MailboxRules\Model\Rules;
+use MailboxRules\Model\RuleExecutionStats;
 use MailboxRules\Service\MailboxProcessor;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
@@ -30,7 +30,6 @@ final class ApplyCommand extends Command
     public function __construct(
         RuleFileLoader|null $ruleFileLoader = null,
         MailboxFactoryInterface|null $mailboxFactory = null,
-        private readonly ?int $watchPasses = null,
     ) {
         parent::__construct();
         $this->ruleFileLoader = $ruleFileLoader ?? new RuleFileLoader();
@@ -111,15 +110,11 @@ final class ApplyCommand extends Command
             $rawInterval = $input->getOption("interval");
             $interval = is_numeric($rawInterval) ? max(0, (int) $rawInterval) : 60;
 
-            $watched = [];
-            foreach ($configurations as $mailboxConfig) {
-                if ($mailboxConfig->name !== null) {
-                    $output->writeln(sprintf("<info>Watching mailbox: %s</info>", $mailboxConfig->name));
-                }
-                $mailbox = $this->mailboxFactory::createMailbox($mailboxConfig->dsn);
-                $watched[] = new Rules($mailbox, $mailboxConfig->rules, $logger);
-            }
-            Rules::watchAll($watched, $interval, $this->watchPasses);
+            $processor->watch(
+                $configurations,
+                $interval,
+                fn (array $stats) => $this->printStats($output, $stats),
+            );
             return Command::SUCCESS;
         }
 
@@ -128,20 +123,18 @@ final class ApplyCommand extends Command
             $rawLimit = $input->getOption("preview-limit");
             $previewLimit = is_numeric($rawLimit) ? (int) $rawLimit : 10;
 
-            foreach ($configurations as $mailboxConfig) {
-                $results = $processor->preview($mailboxConfig, $previewLimit);
-
-                if ($results === []) {
+            foreach ($processor->preview($configurations, $previewLimit) as $preview) {
+                if ($preview->results === []) {
                     continue;
                 }
 
                 $hasResults = true;
 
-                if ($mailboxConfig->name !== null) {
-                    $output->writeln(sprintf("<info>Mailbox: %s</info>", $mailboxConfig->name));
+                if ($preview->mailbox !== null) {
+                    $output->writeln(sprintf("<info>Mailbox: %s</info>", $preview->mailbox));
                 }
 
-                foreach ($results as $result) {
+                foreach ($preview->results as $result) {
                     $output->writeln(sprintf(
                         "<comment>Rule:</comment> %s",
                         $result->ruleName
@@ -166,10 +159,30 @@ final class ApplyCommand extends Command
             return Command::SUCCESS;
         }
 
-        foreach ($configurations as $mailboxConfig) {
-            $processor->process($mailboxConfig);
-        }
+        $this->printStats($output, $processor->apply($configurations));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * @param list<RuleExecutionStats> $stats
+     */
+    private function printStats(OutputInterface $output, array $stats): void
+    {
+        if ($stats === []) {
+            return;
+        }
+
+        $output->writeln("<info>Summary</info>");
+        foreach ($stats as $s) {
+            $output->writeln(sprintf(
+                "  %s: %d evaluated, %d matched, %d action(s), %d failure(s)",
+                $s->ruleName,
+                $s->evaluationCount,
+                $s->matchCount,
+                $s->actionCount,
+                $s->failureCount,
+            ));
+        }
     }
 }

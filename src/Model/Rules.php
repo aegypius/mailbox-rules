@@ -109,37 +109,12 @@ final readonly class Rules
 
     /**
      * One Watch pass: the first covers everything like apply(), later ones only new messages.
+     * Stats cover this pass only.
      */
     public function poll(): void
     {
+        $this->statsCollector->reset();
         $this->traversal->poll($this->applyStep(...));
-    }
-
-    /**
-     * Poll every Rules in one loop, so no Mailbox blocks the others.
-     *
-     * @param iterable<Rules> $all
-     * @param int|null $passes Stop after this many passes; null runs forever.
-     */
-    public static function watchAll(iterable $all, int $interval = 60, ?int $passes = null): void
-    {
-        foreach ($all as $rules) {
-            $rules->statsCollector->reset();
-        }
-
-        for ($pass = 0; $passes === null || $pass < $passes; $pass++) {
-            if ($pass > 0) {
-                sleep($interval);
-            }
-            foreach ($all as $rules) {
-                $rules->poll();
-            }
-        }
-    }
-
-    public function watch(int $interval = 60, ?int $passes = null): void
-    {
-        self::watchAll([$this], $interval, $passes);
     }
 
     /**
