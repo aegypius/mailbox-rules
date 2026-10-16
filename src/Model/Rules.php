@@ -48,11 +48,9 @@ final readonly class Rules
     }
 
     /**
-     * Apply specific rules to a message.
-     *
      * @param list<Rule> $rules
      */
-    private function doApplyRules(MessageInterface $message, array $rules): void
+    private function applyRules(MessageInterface $message, array $rules): void
     {
         foreach ($rules as $rule) {
             $startTimeNs = hrtime(true);
@@ -103,26 +101,17 @@ final readonly class Rules
     public function apply(): void
     {
         $this->statsCollector->reset();
-        $this->traversal->pass($this->applyStep(...));
+        $this->traversal->pass($this->applyRules(...));
         $this->logger->debug('Done processing messages');
     }
 
     /**
-     * One Watch pass: the first covers everything like apply(), later ones only new messages.
      * Stats cover this pass only.
      */
     public function poll(): void
     {
         $this->statsCollector->reset();
-        $this->traversal->poll($this->applyStep(...));
-    }
-
-    /**
-     * @param list<Rule> $rules
-     */
-    private function applyStep(MessageInterface $message, array $rules): void
-    {
-        $this->doApplyRules($message, $rules);
+        $this->traversal->poll($this->applyRules(...));
     }
 
     /**

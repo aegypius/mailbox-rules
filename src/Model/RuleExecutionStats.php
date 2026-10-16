@@ -15,4 +15,16 @@ final readonly class RuleExecutionStats
         public float $totalMatcherTimeMs,
     ) {
     }
+
+    public function plus(self $other): self
+    {
+        return new self(
+            $this->ruleName,
+            $this->evaluationCount + $other->evaluationCount,
+            $this->matchCount + $other->matchCount,
+            $this->actionCount + $other->actionCount,
+            $this->failureCount + $other->failureCount,
+            $this->totalMatcherTimeMs + $other->totalMatcherTimeMs,
+        );
+    }
 }

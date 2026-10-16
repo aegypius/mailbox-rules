@@ -6,6 +6,7 @@ namespace MailboxRules\Model;
 
 use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
+use MailboxRules\Matcher\Matcher;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -63,7 +64,7 @@ final class Traversal
 
         $rulesByFolder = [];
         foreach ($this->rules as $rule) {
-            $scope = $rule->matcher->folderScope($existing) ?? ['INBOX'];
+            $scope = $rule->matcher->folderScope($existing) ?? [Matcher::DEFAULT_FOLDER];
             if ($scope === []) {
                 $this->logger->warning('No folder in scope for rule: {rule}, skipping', [
                     'rule' => $rule->name,

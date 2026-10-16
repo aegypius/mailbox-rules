@@ -14,6 +14,8 @@ use MailboxRules\Contract\MessageInterface;
  */
 interface Matcher
 {
+    public const DEFAULT_FOLDER = 'INBOX';
+
     /**
      * Test if the given message matches this matcher's criteria.
      *

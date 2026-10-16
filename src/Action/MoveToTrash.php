@@ -8,10 +8,7 @@ use MailboxRules\Action;
 use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
 
-/**
- * Moves a message to the Trash Folder (special-use \Trash), or to an explicit Folder when given.
- * Never creates a Trash Folder: without one, and without an explicit name, it fails.
- */
+/** Never creates a Trash Folder: with none and no explicit name, it fails. */
 final readonly class MoveToTrash implements Action
 {
     public function __construct(

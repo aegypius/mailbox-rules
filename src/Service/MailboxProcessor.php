@@ -13,7 +13,7 @@ use MailboxRules\ValueObject\MailboxConfiguration;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-/** Single entry point for Apply, Preview and Watch across Mailboxes; the only place a Rules is built. */
+/** The only place a Rules is built. */
 final readonly class MailboxProcessor
 {
     private MailboxFactoryInterface $mailboxFactory;
@@ -32,9 +32,7 @@ final readonly class MailboxProcessor
     public function apply(iterable $configs): array
     {
         $stats = [];
-        foreach ($configs as $config) {
-            $this->announce('Processing mailbox: {mailbox}', $config);
-            $rules = $this->rulesFor($config);
+        foreach ($this->rulesets($configs, 'Processing mailbox: {mailbox}') as $rules) {
             $rules->apply();
             $stats[] = $rules->stats();
         }
@@ -51,9 +49,8 @@ final readonly class MailboxProcessor
     public function preview(iterable $configs, int $limit = 10): array
     {
         $previews = [];
-        foreach ($configs as $config) {
-            $this->announce('Previewing mailbox: {mailbox}', $config);
-            $previews[] = new MailboxPreview($config->name, $this->rulesFor($config)->preview($limit));
+        foreach ($this->rulesets($configs, 'Previewing mailbox: {mailbox}') as $config => $rules) {
+            $previews[] = new MailboxPreview($config->name, $rules->preview($limit));
         }
 
         return $previews;
@@ -68,11 +65,7 @@ final readonly class MailboxProcessor
      */
     public function watch(iterable $configs, int $interval, callable $onPass, ?int $passes = null): void
     {
-        $watched = [];
-        foreach ($configs as $config) {
-            $this->announce('Watching mailbox: {mailbox}', $config);
-            $watched[] = $this->rulesFor($config);
-        }
+        $watched = iterator_to_array($this->rulesets($configs, 'Watching mailbox: {mailbox}'), false);
 
         for ($pass = 0; $passes === null || $pass < $passes; $pass++) {
             if ($pass > 0) {
@@ -86,9 +79,22 @@ final readonly class MailboxProcessor
             }
 
             $merged = self::merge(...$stats);
-            if (array_sum(array_map(static fn (RuleExecutionStats $s): int => $s->matchCount, $merged)) > 0) {
+            if (array_sum(array_map(static fn (RuleExecutionStats $stats): int => $stats->matchCount, $merged)) > 0) {
                 $onPass($merged);
             }
+        }
+    }
+
+    /**
+     * @param iterable<MailboxConfiguration> $configs
+     * @return \Generator<MailboxConfiguration, Rules>
+     */
+    private function rulesets(iterable $configs, string $announcement): \Generator
+    {
+        foreach ($configs as $config) {
+            $this->announce($announcement, $config);
+
+            yield $config => $this->rulesFor($config);
         }
     }
 
@@ -114,16 +120,10 @@ final readonly class MailboxProcessor
     {
         $byName = [];
         foreach ($lists as $list) {
-            foreach ($list as $s) {
-                $p = $byName[$s->ruleName] ?? null;
-                $byName[$s->ruleName] = new RuleExecutionStats(
-                    $s->ruleName,
-                    ($p->evaluationCount ?? 0) + $s->evaluationCount,
-                    ($p->matchCount ?? 0) + $s->matchCount,
-                    ($p->actionCount ?? 0) + $s->actionCount,
-                    ($p->failureCount ?? 0) + $s->failureCount,
-                    ($p->totalMatcherTimeMs ?? 0.0) + $s->totalMatcherTimeMs,
-                );
+            foreach ($list as $stats) {
+                $byName[$stats->ruleName] = isset($byName[$stats->ruleName])
+                    ? $byName[$stats->ruleName]->plus($stats)
+                    : $stats;
             }
         }
 

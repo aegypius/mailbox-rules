@@ -27,7 +27,8 @@ final readonly class AnyOfMatcher implements Matcher
     {
         $scope = [];
         foreach ($this->matchers as $matcher) {
-            $scope = [...$scope, ...($matcher->folderScope($folders) ?? ['INBOX'])];
+            // An unscoped child means the default Folder scope.
+            $scope = [...$scope, ...($matcher->folderScope($folders) ?? [Matcher::DEFAULT_FOLDER])];
         }
 
         return array_values(array_unique($scope));
