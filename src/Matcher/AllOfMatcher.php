@@ -23,6 +23,19 @@ final readonly class AllOfMatcher implements Matcher
         $this->matchers = $matchers;
     }
 
+    public function folderScope(array $folders): ?array
+    {
+        $scope = null;
+        foreach ($this->matchers as $matcher) {
+            $child = $matcher->folderScope($folders);
+            if ($child !== null) {
+                $scope = $scope === null ? $child : array_values(array_intersect($scope, $child));
+            }
+        }
+
+        return $scope;
+    }
+
     public function matches(MessageInterface $message): bool
     {
         return array_all($this->matchers, fn ($matcher) => $matcher->matches($message));

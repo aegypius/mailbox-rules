@@ -80,7 +80,7 @@ final class RulesProgressReportingTest extends TestCase
     }
 
     #[Test]
-    public function apply_logs_warning_when_folder_not_found(): void
+    public function apply_logs_warning_when_no_folder_is_in_scope(): void
     {
         $handler = new TestHandler();
         $logger = new Logger('test', [$handler]);
@@ -88,7 +88,7 @@ final class RulesProgressReportingTest extends TestCase
 
         (new Rules(new InMemoryMailbox(), [$rule], $logger))->apply();
 
-        self::assertContains('Missing', $this->contexts($handler, Level::Warning, 'folder'));
+        self::assertContains('test', $this->contexts($handler, Level::Warning, 'rule'));
     }
 
     #[Test]

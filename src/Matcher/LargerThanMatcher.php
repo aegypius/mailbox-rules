@@ -11,6 +11,8 @@ use MailboxRules\Contract\MessageInterface;
  */
 final readonly class LargerThanMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     private int $bytes;
 
     /**

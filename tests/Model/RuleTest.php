@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Model;
 
 use MailboxRules\Action;
+use MailboxRules\Action\LogAction;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\Matcher;
-use MailboxRules\Action\LogAction;
 use MailboxRules\Model\Rule;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -40,6 +40,8 @@ final class RuleTest extends TestCase
     {
         // Arrange: matcher that never matches
         $matcher = new class() implements Matcher {
+            use \MailboxRules\Matcher\UnscopedMatcher;
+
             public function matches(MessageInterface $message): bool
             {
                 return false;
@@ -63,6 +65,8 @@ final class RuleTest extends TestCase
     {
         // Arrange: matcher that doesn't match
         $matcher = new class() implements Matcher {
+            use \MailboxRules\Matcher\UnscopedMatcher;
+
             public function matches(MessageInterface $message): bool
             {
                 return false;

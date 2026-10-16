@@ -20,6 +20,11 @@ final readonly class FolderMatcher implements Matcher
         $this->patternMatcher = new PatternMatcher($pattern);
     }
 
+    public function folderScope(array $folders): array
+    {
+        return array_values(array_filter($folders, $this->patternMatcher->matches(...)));
+    }
+
     public function matches(MessageInterface $message): bool
     {
         return $this->patternMatcher->matches($message->folderPath());

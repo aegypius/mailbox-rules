@@ -14,8 +14,6 @@ use MailboxRules\Model\Traversal;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\AbstractLogger;
-use Psr\Log\LoggerInterface;
 
 #[CoversClass(Traversal::class)]
 final class TraversalTest extends TestCase
@@ -49,33 +47,6 @@ final class TraversalTest extends TestCase
         return [$step, $visits];
     }
 
-    /**
-     * @return array{LoggerInterface, \ArrayObject<int, string>} Logger and its warnings.
-     */
-    private function logger(): array
-    {
-        /** @var \ArrayObject<int, string> $warnings */
-        $warnings = new \ArrayObject();
-        $logger = new class($warnings) extends AbstractLogger {
-            /**
-             * @param \ArrayObject<int, string> $warnings
-             */
-            public function __construct(public readonly \ArrayObject $warnings)
-            {
-            }
-
-            public function log(mixed $level, string|\Stringable $message, array $context = []): void
-            {
-                if ($level === 'warning') {
-                    $folder = $context['folder'] ?? '';
-                    $this->warnings[] = (string) $message . ' ' . (is_string($folder) ? $folder : '');
-                }
-            }
-        };
-
-        return [$logger, $warnings];
-    }
-
     #[Test]
     public function a_pass_gives_each_message_the_rules_of_its_folder(): void
     {
@@ -90,17 +61,32 @@ final class TraversalTest extends TestCase
     }
 
     #[Test]
-    public function a_missing_folder_is_warned_about_in_every_mode(): void
+    public function a_pattern_expands_to_every_matching_folder(): void
+    {
+        $mailbox = new InMemoryMailbox('Archives/2024', 'Archives/2025', 'Work');
+        foreach (['INBOX', 'Archives/2024', 'Archives/2025', 'Work'] as $folder) {
+            $mailbox->deliver($folder, subject: $folder);
+        }
+        [$step, $visits] = $this->recorder();
+
+        (new Traversal($mailbox, [$this->rule('R', 'Archives/*')]))->pass($step);
+
+        self::assertSame(['Archives/2024:Archives/2024:R', 'Archives/2025:Archives/2025:R'], $visits->getArrayCopy());
+    }
+
+    #[Test]
+    public function a_pattern_matches_folders_created_after_the_traversal_was_built(): void
     {
         $mailbox = new InMemoryMailbox();
-        [$logger, $warnings] = $this->logger();
-        $traversal = new Traversal($mailbox, [$this->rule('R', 'Gone')], $logger);
-        [$step] = $this->recorder();
+        $traversal = new Traversal($mailbox, [$this->rule('R', 'Archives/*')]);
+        [$step, $visits] = $this->recorder();
 
         $traversal->pass($step);
-        $traversal->poll($step);
+        $mailbox->addFolder('Archives/2026');
+        $mailbox->deliver('Archives/2026', subject: 'late');
+        $traversal->pass($step);
 
-        self::assertSame(['Folder not found: {folder}, skipping rules Gone', 'Folder not found: {folder}, skipping rules Gone'], $warnings->getArrayCopy());
+        self::assertSame(['Archives/2026:late:R'], $visits->getArrayCopy());
     }
 
     #[Test]

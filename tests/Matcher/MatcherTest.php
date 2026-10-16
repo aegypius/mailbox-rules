@@ -15,6 +15,8 @@ final class MatcherTest extends TestCase
     public function testMatcherCanBeImplemented(): void
     {
         $matcher = new class() implements Matcher {
+            use \MailboxRules\Matcher\UnscopedMatcher;
+
             public function matches(MessageInterface $message): bool
             {
                 return true;

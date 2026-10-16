@@ -22,6 +22,8 @@ use MailboxRules\Contract\MessageInterface;
  */
 final readonly class BodyMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     private PatternMatcher $patternMatcher;
 
     public function __construct(string $pattern)

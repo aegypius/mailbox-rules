@@ -17,6 +17,8 @@ use MailboxRules\Contract\MessageInterface;
  */
 final readonly class AnyMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     /**
      * Always returns true, matching any message.
      *

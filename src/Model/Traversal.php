@@ -6,7 +6,6 @@ namespace MailboxRules\Model;
 
 use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
-use MailboxRules\Helper\FolderExtractor;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -14,9 +13,9 @@ use Psr\Log\NullLogger;
 final class Traversal
 {
     /**
-     * @var array<string, list<Rule>>
+     * @var list<Rule>
      */
-    private array $rulesByFolder = [];
+    private readonly array $rules;
 
     /**
      * @var array<string, int> highest UID seen per Folder, in memory only
@@ -31,11 +30,7 @@ final class Traversal
         iterable $rules,
         private readonly LoggerInterface $logger = new NullLogger(),
     ) {
-        foreach ($rules as $rule) {
-            foreach (FolderExtractor::extractAllFolderPaths($rule->matcher) as $folderPath) {
-                $this->rulesByFolder[$folderPath ?? 'INBOX'][] = $rule;
-            }
-        }
+        $this->rules = array_values([...$rules]);
     }
 
     /**
@@ -66,14 +61,21 @@ final class Traversal
     {
         $existing = $this->mailbox->folders();
 
-        foreach ($this->rulesByFolder as $folder => $rules) {
-            if (!in_array($folder, $existing, true)) {
-                $this->logger->warning('Folder not found: {folder}, skipping rules', [
-                    'folder' => $folder,
+        $rulesByFolder = [];
+        foreach ($this->rules as $rule) {
+            $scope = $rule->matcher->folderScope($existing) ?? ['INBOX'];
+            if ($scope === []) {
+                $this->logger->warning('No folder in scope for rule: {rule}, skipping', [
+                    'rule' => $rule->name,
                 ]);
-                continue;
             }
 
+            foreach ($scope as $folder) {
+                $rulesByFolder[$folder][] = $rule;
+            }
+        }
+
+        foreach ($rulesByFolder as $folder => $rules) {
             $this->logger->info('Processing folder: {folder}', [
                 'folder' => $folder,
             ]);

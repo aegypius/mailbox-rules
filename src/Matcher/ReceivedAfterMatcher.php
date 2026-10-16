@@ -13,6 +13,8 @@ use MailboxRules\Contract\MessageInterface;
  */
 final readonly class ReceivedAfterMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     private CarbonInterface $cutoff;
 
     /**

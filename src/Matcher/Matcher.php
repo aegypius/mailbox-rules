@@ -21,4 +21,12 @@ interface Matcher
      * @return bool True if the message matches, false otherwise
      */
     public function matches(MessageInterface $message): bool;
+
+    /**
+     * Folders this Matcher confines a Rule to, out of the Mailbox's current Folder list.
+     *
+     * @param list<string> $folders
+     * @return list<string>|null null when the Matcher does not constrain the Folder scope
+     */
+    public function folderScope(array $folders): ?array;
 }
