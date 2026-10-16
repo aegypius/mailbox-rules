@@ -8,6 +8,8 @@ use MailboxRules\Contract\MessageInterface;
 
 final readonly class HasAttachmentMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     public function matches(MessageInterface $message): bool
     {
         return $message->hasAttachments();

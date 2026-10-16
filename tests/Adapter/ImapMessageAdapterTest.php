@@ -14,6 +14,7 @@ use DirectoryTree\ImapEngine\Message;
 use MailboxRules\Adapter\ImapAttachmentAdapter;
 use MailboxRules\Adapter\ImapMessageAdapter;
 use MailboxRules\Contract\MessageInterface;
+use MailboxRules\ValueObject\EmailAddress;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -49,10 +50,11 @@ final class ImapMessageAdapterTest extends TestCase
     public function testFromDelegatesToMessage(): void
     {
         $address = $this->createStub(Address::class);
+        $address->method('email')->willReturn('a@example.com');
         $message = $this->createStub(Message::class);
         $message->method('from')->willReturn($address);
 
-        self::assertSame($address, $this->makeAdapter($message)->from());
+        self::assertEquals(new EmailAddress('a@example.com'), $this->makeAdapter($message)->from());
     }
 
     public function testFromReturnsNullWhenNoSender(): void
@@ -66,28 +68,31 @@ final class ImapMessageAdapterTest extends TestCase
     public function testToDelegatesToMessage(): void
     {
         $address = $this->createStub(Address::class);
+        $address->method('email')->willReturn('a@example.com');
         $message = $this->createStub(Message::class);
         $message->method('to')->willReturn([$address]);
 
-        self::assertSame([$address], $this->makeAdapter($message)->to());
+        self::assertEquals([new EmailAddress('a@example.com')], $this->makeAdapter($message)->to());
     }
 
     public function testCcDelegatesToMessage(): void
     {
         $address = $this->createStub(Address::class);
+        $address->method('email')->willReturn('a@example.com');
         $message = $this->createStub(Message::class);
         $message->method('cc')->willReturn([$address]);
 
-        self::assertSame([$address], $this->makeAdapter($message)->cc());
+        self::assertEquals([new EmailAddress('a@example.com')], $this->makeAdapter($message)->cc());
     }
 
     public function testBccDelegatesToMessage(): void
     {
         $address = $this->createStub(Address::class);
+        $address->method('email')->willReturn('a@example.com');
         $message = $this->createStub(Message::class);
         $message->method('bcc')->willReturn([$address]);
 
-        self::assertSame([$address], $this->makeAdapter($message)->bcc());
+        self::assertEquals([new EmailAddress('a@example.com')], $this->makeAdapter($message)->bcc());
     }
 
     public function testSubjectDelegatesToMessage(): void
@@ -245,6 +250,30 @@ final class ImapMessageAdapterTest extends TestCase
             ->with('Trash', true);
 
         (new ImapMessageAdapter($message))->move('Trash', true);
+    }
+
+    public function testCopyCreatesMissingParentFolders(): void
+    {
+        $folders = $this->createMock(FolderRepository::class);
+        $folders->method('find')->willReturn(null);
+        $created = [];
+        $folders->expects(self::exactly(2))
+            ->method('create')
+            ->willReturnCallback(function (string $path) use (&$created): Folder {
+                $created[] = $path;
+                return $this->createStub(Folder::class);
+            });
+
+        $mailbox = $this->createStub(Mailbox::class);
+        $mailbox->method('folders')->willReturn($folders);
+
+        $message = $this->createMock(Message::class);
+        $message->method('folder')->willReturn($this->makeFolderWithMailbox($mailbox));
+        $message->expects(self::once())->method('copy');
+
+        (new ImapMessageAdapter($message))->copy('A/B');
+
+        self::assertSame(['A', 'A/B'], $created);
     }
 
     public function testCopyCallsMessageCopyWithUtf7EncodedFolder(): void

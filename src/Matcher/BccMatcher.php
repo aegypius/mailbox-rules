@@ -14,6 +14,8 @@ use MailboxRules\Contract\MessageInterface;
  */
 final readonly class BccMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     private PatternMatcher $patternMatcher;
 
     public function __construct(string $pattern)

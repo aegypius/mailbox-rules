@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use DirectoryTree\ImapEngine\Address;
 use MailboxRules\Action\Flag;
 use MailboxRules\Action\MarkAsRead;
 use MailboxRules\Action\MoveToFolder;
 use MailboxRules\Contract\MessageInterface;
+use MailboxRules\ValueObject\EmailAddress;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use function MailboxRules\allOf;
@@ -33,8 +33,7 @@ final class IntegrationTest extends TestCase
         );
 
         $message = $this->createMock(MessageInterface::class);
-        $sender = $this->createStub(Address::class);
-        $sender->method('email')->willReturn('test@chaosium.com');
+        $sender = new EmailAddress('test@chaosium.com');
         $message->method('from')->willReturn($sender);
         $message->expects($this->once())
             ->method('move')
@@ -100,8 +99,7 @@ final class IntegrationTest extends TestCase
 
         // Should match: spam domain, no order confirmation
         $spamMessage = $this->createMock(MessageInterface::class);
-        $spamSender = $this->createStub(Address::class);
-        $spamSender->method('email')->willReturn('bad@spam.com');
+        $spamSender = new EmailAddress('bad@spam.com');
         $spamMessage->method('from')->willReturn($spamSender);
         $spamMessage->method('subject')->willReturn('Get rich quick!');
         $spamMessage->expects($this->once())
@@ -115,8 +113,7 @@ final class IntegrationTest extends TestCase
 
         // Should not match: spam domain but has order confirmation
         $orderMessage = $this->createMock(MessageInterface::class);
-        $orderSender = $this->createStub(Address::class);
-        $orderSender->method('email')->willReturn('orders@spam.com');
+        $orderSender = new EmailAddress('orders@spam.com');
         $orderMessage->method('from')->willReturn($orderSender);
         $orderMessage->method('subject')->willReturn('Order Confirmation #12345');
         $orderMessage->expects($this->never())->method('move');
@@ -162,8 +159,7 @@ final class IntegrationTest extends TestCase
         );
 
         $message = $this->createMock(MessageInterface::class);
-        $recipient = $this->createStub(Address::class);
-        $recipient->method('email')->willReturn('support@example.com');
+        $recipient = new EmailAddress('support@example.com');
         $message->method('to')->willReturn([$recipient]);
         $message->expects($this->once())->method('markFlagged');
 
@@ -183,8 +179,7 @@ final class IntegrationTest extends TestCase
         );
 
         $message = $this->createMock(MessageInterface::class);
-        $sender = $this->createStub(Address::class);
-        $sender->method('email')->willReturn('new@example.com');
+        $sender = new EmailAddress('new@example.com');
         $message->method('from')->willReturn($sender);
         $message->expects($this->never())->method('move');
 
@@ -212,8 +207,7 @@ final class IntegrationTest extends TestCase
 
         // Should match: company email with [Team] subject
         $message1 = $this->createMock(MessageInterface::class);
-        $sender1 = $this->createStub(Address::class);
-        $sender1->method('email')->willReturn('alice@company.com');
+        $sender1 = new EmailAddress('alice@company.com');
         $message1->method('from')->willReturn($sender1);
         $message1->method('subject')->willReturn('[Team] Project Update');
         $message1->expects($this->once())->method('move')->with('Team', false);
@@ -225,10 +219,8 @@ final class IntegrationTest extends TestCase
 
         // Should match: to team domain, not out of office
         $message2 = $this->createMock(MessageInterface::class);
-        $sender2 = $this->createStub(Address::class);
-        $sender2->method('email')->willReturn('external@other.com');
-        $recipient2 = $this->createStub(Address::class);
-        $recipient2->method('email')->willReturn('dev@team.example.com');
+        $sender2 = new EmailAddress('external@other.com');
+        $recipient2 = new EmailAddress('dev@team.example.com');
         $message2->method('from')->willReturn($sender2);
         $message2->method('to')->willReturn([$recipient2]);
         $message2->method('subject')->willReturn('Question about API');

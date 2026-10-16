@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace MailboxRules;
 
 use DirectoryTree\ImapEngine\Mailbox;
+use MailboxRules\Adapter\ImapMailbox;
+use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\ValueObject\Dsn;
 
 final readonly class MailboxFactory implements MailboxFactoryInterface
 {
-    public static function createMailbox(Dsn $dsn): Mailbox
+    public static function createMailbox(Dsn $dsn): MailboxInterface
     {
-        return new Mailbox([
+        return new ImapMailbox(new Mailbox([
             'port' => $dsn->port,               // The port number to connect to
             'host' => $dsn->host,                // The hostname of the IMAP server
             'username' => $dsn->user,           // Your IMAP username
@@ -22,6 +24,6 @@ final readonly class MailboxFactory implements MailboxFactoryInterface
             // validate_cert	bool	Whether to validate SSL certificates
             // authentication	string	Authentication method ('plain' or 'oauth')
             // proxy	array	Proxy configuration options
-        ]);
+        ]));
     }
 }

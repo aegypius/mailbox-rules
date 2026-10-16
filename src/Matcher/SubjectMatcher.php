@@ -13,6 +13,8 @@ use MailboxRules\Contract\MessageInterface;
  */
 final readonly class SubjectMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     private PatternMatcher $patternMatcher;
 
     public function __construct(string $pattern)

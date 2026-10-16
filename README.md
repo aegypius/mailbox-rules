@@ -238,6 +238,12 @@ then: static fn () {
 }
 ```
 
+## Watching
+
+`--watch` applies the Rules once, then polls every `--interval` seconds (default 60) and runs them only on messages that arrived since. Every Folder of every Mailbox is covered; marks are kept in memory, so a restart begins with a full pass.
+
+Rules that move messages back and forth between watched Folders will loop forever: the engine has no guard, so keep such Rules from undoing each other.
+
 ## Pattern Matching
 
 The DSL supports three pattern matching modes:

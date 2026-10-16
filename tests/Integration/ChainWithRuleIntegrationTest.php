@@ -46,7 +46,6 @@ final class ChainWithRuleIntegrationTest extends TestCase
         );
 
         self::assertSame('Le Taillis', $rule->name);
-        self::assertNotNull($rule->matcher);
 
         // Execute the rule
         $actions = iterator_to_array($rule($message));

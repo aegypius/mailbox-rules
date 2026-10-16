@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Model;
 
-use DirectoryTree\ImapEngine\Collections\MessageCollection;
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\Message;
-use DirectoryTree\ImapEngine\MessageQuery;
 use MailboxRules\Action\Flag;
 use MailboxRules\Action\MarkAsRead;
 use MailboxRules\Action\MoveToFolder;
+use MailboxRules\Adapter\InMemoryMailbox;
 use MailboxRules\Contract\MessageInterface;
+use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Model\PreviewResult;
 use MailboxRules\Model\Rule;
@@ -24,55 +21,41 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(PreviewResult::class)]
 class RulesPreviewTest extends TestCase
 {
-    /**
-     * @param list<Message> $messages
-     */
-    private function createMailboxMock(array $messages): Mailbox
+    private function mailbox(int $messages = 1): InMemoryMailbox
     {
-        $mailbox = $this->createMock(Mailbox::class);
-        $folder = $this->createMock(Folder::class);
-        $query = $this->createMock(MessageQuery::class);
-
-        $mailbox->expects($this->once())->method('connect');
-        $mailbox->expects($this->once())->method('inbox')->willReturn($folder);
-        $folder->expects($this->once())->method('messages')->willReturn($query);
-        $query->expects($this->once())->method('withHeaders')->willReturn($query);
-        $query->expects($this->once())->method('limit')->with(10)->willReturn($query);
-        $query->expects($this->once())->method('get')->willReturn(new MessageCollection($messages));
+        $mailbox = new InMemoryMailbox();
+        for ($i = 0; $i < $messages; ++$i) {
+            $mailbox->deliver('INBOX');
+        }
 
         return $mailbox;
     }
 
-    public function testPreviewReturnsSingleRuleMatch(): void
+    public function testPreviewReturnsSingleRuleMatchWithoutExecuting(): void
     {
-        $message = $this->createStub(Message::class);
-        $mailbox = $this->createMailboxMock([$message]);
+        $mailbox = $this->mailbox();
 
         $rule = new Rule(
             name: 'Test Rule',
-            matcher: null,
+            matcher: new AnyMatcher(),
             then: static fn () => yield new MoveToFolder('Folder')
         );
 
-        $rules = new Rules($mailbox, [$rule]);
-        $results = $rules->preview();
+        $results = (new Rules($mailbox, [$rule]))->preview();
 
         $this->assertCount(1, $results);
-        $this->assertInstanceOf(PreviewResult::class, $results[0]);
         $this->assertInstanceOf(MessageInterface::class, $results[0]->message);
         $this->assertSame('Test Rule', $results[0]->ruleName);
         $this->assertCount(1, $results[0]->actions);
         $this->assertInstanceOf(MoveToFolder::class, $results[0]->actions[0]);
+        $this->assertSame(['INBOX'], $mailbox->folders(), 'Preview must not move anything');
     }
 
     public function testPreviewReturnsMultipleActionsForSingleRule(): void
     {
-        $message = $this->createStub(Message::class);
-        $mailbox = $this->createMailboxMock([$message]);
-
         $rule = new Rule(
             name: 'Multi-Action Rule',
-            matcher: null,
+            matcher: new AnyMatcher(),
             then: static function () {
                 yield new MoveToFolder('Archive');
                 yield new MarkAsRead();
@@ -80,8 +63,7 @@ class RulesPreviewTest extends TestCase
             }
         );
 
-        $rules = new Rules($mailbox, [$rule]);
-        $results = $rules->preview();
+        $results = (new Rules($this->mailbox(), [$rule]))->preview();
 
         $this->assertCount(1, $results);
         $this->assertCount(3, $results[0]->actions);
@@ -92,23 +74,10 @@ class RulesPreviewTest extends TestCase
 
     public function testPreviewReturnsMultipleRulesForSingleMessage(): void
     {
-        $message = $this->createStub(Message::class);
-        $mailbox = $this->createMailboxMock([$message]);
+        $rule1 = new Rule('Rule 1', new AnyMatcher(), static fn () => yield new MoveToFolder('Folder1'));
+        $rule2 = new Rule('Rule 2', new AnyMatcher(), static fn () => yield new MarkAsRead());
 
-        $rule1 = new Rule(
-            name: 'Rule 1',
-            matcher: null,
-            then: static fn () => yield new MoveToFolder('Folder1')
-        );
-
-        $rule2 = new Rule(
-            name: 'Rule 2',
-            matcher: null,
-            then: static fn () => yield new MarkAsRead()
-        );
-
-        $rules = new Rules($mailbox, [$rule1, $rule2]);
-        $results = $rules->preview();
+        $results = (new Rules($this->mailbox(), [$rule1, $rule2]))->preview();
 
         $this->assertCount(2, $results);
         $this->assertSame('Rule 1', $results[0]->ruleName);
@@ -117,41 +86,29 @@ class RulesPreviewTest extends TestCase
 
     public function testPreviewSkipsNonMatchingRules(): void
     {
-        $message = $this->createStub(Message::class);
-        $mailbox = $this->createMailboxMock([$message]);
-
         $matcher = $this->createStub(Matcher::class);
         $matcher->method('matches')->willReturn(false);
 
-        $rule = new Rule(
-            name: 'Non-matching Rule',
-            matcher: $matcher,
-            then: static fn () => yield new MoveToFolder('Folder')
-        );
+        $rule = new Rule('Non-matching Rule', $matcher, static fn () => yield new MoveToFolder('Folder'));
 
-        $rules = new Rules($mailbox, [$rule]);
-        $results = $rules->preview();
-
-        $this->assertCount(0, $results);
+        $this->assertCount(0, (new Rules($this->mailbox(), [$rule]))->preview());
     }
 
     public function testPreviewHandlesMultipleMessages(): void
     {
-        $message1 = $this->createStub(Message::class);
-        $message2 = $this->createStub(Message::class);
-        $mailbox = $this->createMailboxMock([$message1, $message2]);
+        $rule = new Rule('Test Rule', new AnyMatcher(), static fn () => yield new Flag());
 
-        $rule = new Rule(
-            name: 'Test Rule',
-            matcher: null,
-            then: static fn () => yield new Flag()
-        );
-
-        $rules = new Rules($mailbox, [$rule]);
-        $results = $rules->preview();
+        $results = (new Rules($this->mailbox(2), [$rule]))->preview();
 
         $this->assertCount(2, $results);
-        $this->assertInstanceOf(MessageInterface::class, $results[0]->message);
-        $this->assertInstanceOf(MessageInterface::class, $results[1]->message);
+    }
+
+    public function testPreviewRecordsNoStats(): void
+    {
+        $rules = new Rules($this->mailbox(), [new Rule('R', new AnyMatcher(), static fn () => yield new Flag())]);
+
+        $rules->preview();
+
+        $this->assertSame([], $rules->stats());
     }
 }

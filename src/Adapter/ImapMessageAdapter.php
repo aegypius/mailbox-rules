@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MailboxRules\Adapter;
 
 use Carbon\CarbonInterface;
-use DirectoryTree\ImapEngine\Address;
+use DirectoryTree\ImapEngine\Address as ImapAddress;
 use DirectoryTree\ImapEngine\Attachment;
 use DirectoryTree\ImapEngine\FolderInterface;
 use DirectoryTree\ImapEngine\MailboxInterface;
@@ -13,6 +13,7 @@ use DirectoryTree\ImapEngine\Message;
 use DirectoryTree\ImapEngine\Support\Str;
 use MailboxRules\Contract\AttachmentInterface;
 use MailboxRules\Contract\MessageInterface;
+use MailboxRules\ValueObject\EmailAddress;
 
 final readonly class ImapMessageAdapter implements MessageInterface
 {
@@ -20,33 +21,35 @@ final readonly class ImapMessageAdapter implements MessageInterface
     {
     }
 
-    public function from(): ?Address
+    public function from(): ?EmailAddress
     {
-        return $this->message->from();
+        $from = $this->message->from();
+
+        return $from instanceof ImapAddress ? self::address($from) : null;
     }
 
     /**
-     * @return array<Address>
+     * @return array<EmailAddress>
      */
     public function to(): array
     {
-        return $this->message->to();
+        return array_map(self::address(...), $this->message->to());
     }
 
     /**
-     * @return array<Address>
+     * @return array<EmailAddress>
      */
     public function cc(): array
     {
-        return $this->message->cc();
+        return array_map(self::address(...), $this->message->cc());
     }
 
     /**
-     * @return array<Address>
+     * @return array<EmailAddress>
      */
     public function bcc(): array
     {
-        return $this->message->bcc();
+        return array_map(self::address(...), $this->message->bcc());
     }
 
     public function subject(): ?string
@@ -90,6 +93,11 @@ final readonly class ImapMessageAdapter implements MessageInterface
         );
     }
 
+    public function uid(): int
+    {
+        return $this->message->uid();
+    }
+
     public function folderPath(): string
     {
         return $this->message->folder()->path();
@@ -103,10 +111,7 @@ final readonly class ImapMessageAdapter implements MessageInterface
 
     public function copy(string $folder): void
     {
-        $mailbox = $this->message->folder()->mailbox();
-        if (!$mailbox->folders()->find($folder) instanceof FolderInterface) {
-            $mailbox->folders()->create($folder);
-        }
+        $this->ensureFolderExists($this->message->folder()->mailbox(), $folder);
         $this->message->copy(Str::toImapUtf7($folder));
     }
 
@@ -133,6 +138,11 @@ final readonly class ImapMessageAdapter implements MessageInterface
     public function delete(bool $expunge = false): void
     {
         $this->message->delete($expunge);
+    }
+
+    private static function address(ImapAddress $address): EmailAddress
+    {
+        return new EmailAddress($address->email());
     }
 
     private function ensureFolderExists(MailboxInterface $mailbox, string $folderPath): void

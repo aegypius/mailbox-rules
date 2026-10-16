@@ -9,6 +9,8 @@ use MailboxRules\Contract\MessageInterface;
 
 final readonly class AttachmentTypeMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     public function __construct(
         private string $pattern,
     ) {

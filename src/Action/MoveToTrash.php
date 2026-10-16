@@ -5,26 +5,25 @@ declare(strict_types=1);
 namespace MailboxRules\Action;
 
 use MailboxRules\Action;
+use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
 
 /**
- * Action that moves a message to the Trash folder.
- *
- * This action provides recoverable deletion by moving messages to a trash folder.
- * The default folder name is "Trash", but can be customized.
- *
- * Common trash folder names: "Trash", "Deleted Items", "Deleted Messages", "[Gmail]/Trash"
+ * Never creates a Trash Folder: with none and no explicit name, it fails.
  */
 final readonly class MoveToTrash implements Action
 {
     public function __construct(
-        private string $trashFolder = 'Trash',
+        private ?string $trashFolder = null,
         private bool $expunge = false,
     ) {
     }
 
-    public function __invoke(MessageInterface $message): void
+    public function __invoke(MessageInterface $message, MailboxInterface $mailbox): void
     {
-        $message->move($this->trashFolder, $this->expunge);
+        $trash = $this->trashFolder ?? $mailbox->trash()
+            ?? throw new \RuntimeException('No \\Trash folder on this mailbox; pass an explicit folder to MoveToTrash.');
+
+        $message->move($trash, $this->expunge);
     }
 }

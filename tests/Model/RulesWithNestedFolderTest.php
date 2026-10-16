@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Model;
 
-use DirectoryTree\ImapEngine\Collections\MessageCollection;
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\FolderRepository;
-use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\MessageQuery;
-use MailboxRules\Action\LogAction;
+use MailboxRules\Action\Flag;
+use MailboxRules\Adapter\InMemoryMailbox;
 use MailboxRules\Matcher\AllOfMatcher;
 use MailboxRules\Matcher\FolderMatcher;
 use MailboxRules\Matcher\SubjectMatcher;
@@ -23,108 +19,38 @@ use PHPUnit\Framework\TestCase;
 final class RulesWithNestedFolderTest extends TestCase
 {
     #[Test]
-    public function it_handles_nested_folder_paths_like_promotions_slash_steam(): void
+    public function it_runs_the_rule_in_a_nested_folder_only(): void
     {
-        // Create a matcher with nested folder path: Promotions/Steam
-        $matcher = new AllOfMatcher(
-            new FolderMatcher('Promotions/Steam'),
-            new SubjectMatcher('test')
-        );
+        $mailbox = new InMemoryMailbox('Promotions/Steam');
+        $steam = $mailbox->deliver('Promotions/Steam', subject: 'test');
+        $inbox = $mailbox->deliver('INBOX', subject: 'test');
 
         $rule = new Rule(
             name: 'Steam Promotions',
-            matcher: $matcher,
-            then: static fn () => yield new LogAction()
+            matcher: new AllOfMatcher(new FolderMatcher('Promotions/Steam'), new SubjectMatcher('test')),
+            then: static fn () => yield new Flag()
         );
 
-        // Setup mailbox mock
-        $mailbox = $this->createMock(Mailbox::class);
-        $folders = $this->createMock(FolderRepository::class);
-        $promotionsSteamFolder = $this->createMock(Folder::class);
-        $query = $this->createMock(MessageQuery::class);
-        $messages = new MessageCollection([]);
+        (new Rules($mailbox, [$rule]))->apply();
 
-        $mailbox->expects($this->once())->method('connect');
-
-        // Should query the "Promotions/Steam" folder exactly
-        $mailbox->expects($this->once())
-            ->method('folders')
-            ->willReturn($folders);
-
-        $folders->expects($this->once())
-            ->method('find')
-            ->with('Promotions/Steam')
-            ->willReturn($promotionsSteamFolder);
-
-        // Should NEVER call inbox() when folder matcher is present
-        $mailbox->expects($this->never())->method('inbox');
-
-        $promotionsSteamFolder->expects($this->once())->method('messages')->willReturn($query);
-        $query->expects($this->once())->method('withHeaders')->willReturn($query);
-        $query->expects($this->once())->method('get')->willReturn($messages);
-
-        // Execute
-        $rules = new Rules($mailbox, [$rule]);
-        $rules->apply();
+        self::assertTrue($steam->isFlagged());
+        self::assertFalse($inbox->isFlagged());
     }
 
     #[Test]
     public function it_handles_multiple_nested_folder_paths(): void
     {
-        // Rule 1: Promotions/Steam
-        $rule1 = new Rule(
-            name: 'Steam Promotions',
-            matcher: new AllOfMatcher(
-                new FolderMatcher('Promotions/Steam'),
-                new SubjectMatcher('game')
-            ),
-            then: static fn () => yield new LogAction()
-        );
+        $mailbox = new InMemoryMailbox('Promotions/Steam', 'Archives/2024');
+        $steam = $mailbox->deliver('Promotions/Steam', subject: 'game');
+        $archive = $mailbox->deliver('Archives/2024', subject: 'old');
 
-        // Rule 2: Archives/2024
-        $rule2 = new Rule(
-            name: 'Archives 2024',
-            matcher: new AllOfMatcher(
-                new FolderMatcher('Archives/2024'),
-                new SubjectMatcher('old')
-            ),
-            then: static fn () => yield new LogAction()
-        );
-
-        // Setup mailbox mock
-        $mailbox = $this->createMock(Mailbox::class);
-        $folders = $this->createMock(FolderRepository::class);
-        $steamFolder = $this->createMock(Folder::class);
-        $archivesFolder = $this->createMock(Folder::class);
-        $query = $this->createMock(MessageQuery::class);
-        $messages = new MessageCollection([]);
-
-        $mailbox->expects($this->once())->method('connect');
-
-        // Should query BOTH folders
-        $mailbox->expects($this->exactly(2))
-            ->method('folders')
-            ->willReturn($folders);
-
-        $folders->expects($this->exactly(2))
-            ->method('find')
-            ->willReturnCallback(function (string $name) use ($steamFolder, $archivesFolder): ?Folder {
-                return match ($name) {
-                    'Promotions/Steam' => $steamFolder,
-                    'Archives/2024' => $archivesFolder,
-                    default => null,
-                };
-            });
-
-        $mailbox->expects($this->never())->method('inbox');
-
-        $steamFolder->expects($this->once())->method('messages')->willReturn($query);
-        $archivesFolder->expects($this->once())->method('messages')->willReturn($query);
-        $query->expects($this->exactly(2))->method('withHeaders')->willReturn($query);
-        $query->expects($this->exactly(2))->method('get')->willReturn($messages);
-
-        // Execute
-        $rules = new Rules($mailbox, [$rule1, $rule2]);
+        $rules = new Rules($mailbox, [
+            new Rule('Steam', new AllOfMatcher(new FolderMatcher('Promotions/Steam'), new SubjectMatcher('game')), static fn () => yield new Flag()),
+            new Rule('Archive', new AllOfMatcher(new FolderMatcher('Archives/2024'), new SubjectMatcher('old')), static fn () => yield new Flag()),
+        ]);
         $rules->apply();
+
+        self::assertTrue($steam->isFlagged());
+        self::assertTrue($archive->isFlagged());
     }
 }

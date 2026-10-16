@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Model;
 
-use DirectoryTree\ImapEngine\Collections\MessageCollection;
-use DirectoryTree\ImapEngine\Folder;
-use DirectoryTree\ImapEngine\Mailbox;
-use DirectoryTree\ImapEngine\MessageQuery;
 use MailboxRules\Action\LogAction;
-use MailboxRules\Contract\MessageInterface;
+use MailboxRules\Adapter\InMemoryMailbox;
+use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -19,75 +16,33 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Rules::class)]
 final class RulesPreviewLimitTest extends TestCase
 {
+    private function rules(int $messages): Rules
+    {
+        $mailbox = new InMemoryMailbox();
+        for ($i = 0; $i < $messages; ++$i) {
+            $mailbox->deliver('INBOX');
+        }
+
+        return new Rules($mailbox, [
+            new Rule('Test', new AnyMatcher(), static fn (): iterable => yield new LogAction()),
+        ]);
+    }
+
     #[Test]
     public function preview_uses_default_limit_of_10(): void
     {
-        $query = $this->createMock(MessageQuery::class);
-        $query->method('withHeaders')->willReturn($query);
-        $query->expects($this->once())->method('limit')->with(10)->willReturn($query);
-        $query->method('get')->willReturn(new MessageCollection([]));
-
-        $folder = $this->createStub(Folder::class);
-        $folder->method('messages')->willReturn($query);
-
-        $mailbox = $this->createStub(Mailbox::class);
-        $mailbox->method('inbox')->willReturn($folder);
-
-        $rule = new Rule(
-            name: 'Test',
-            matcher: null,
-            then: static fn (MessageInterface $m): iterable => yield new LogAction()
-        );
-
-        $rules = new Rules($mailbox, [$rule]);
-        $rules->preview();
+        self::assertCount(10, $this->rules(12)->preview());
     }
 
     #[Test]
     public function preview_accepts_custom_limit(): void
     {
-        $query = $this->createMock(MessageQuery::class);
-        $query->method('withHeaders')->willReturn($query);
-        $query->expects($this->once())->method('limit')->with(50)->willReturn($query);
-        $query->method('get')->willReturn(new MessageCollection([]));
-
-        $folder = $this->createStub(Folder::class);
-        $folder->method('messages')->willReturn($query);
-
-        $mailbox = $this->createStub(Mailbox::class);
-        $mailbox->method('inbox')->willReturn($folder);
-
-        $rule = new Rule(
-            name: 'Test',
-            matcher: null,
-            then: static fn (MessageInterface $m): iterable => yield new LogAction()
-        );
-
-        $rules = new Rules($mailbox, [$rule]);
-        $rules->preview(50);
+        self::assertCount(50, $this->rules(60)->preview(50));
     }
 
     #[Test]
     public function preview_with_zero_limit_fetches_all_messages(): void
     {
-        $query = $this->createMock(MessageQuery::class);
-        $query->method('withHeaders')->willReturn($query);
-        $query->expects($this->never())->method('limit');
-        $query->method('get')->willReturn(new MessageCollection([]));
-
-        $folder = $this->createStub(Folder::class);
-        $folder->method('messages')->willReturn($query);
-
-        $mailbox = $this->createStub(Mailbox::class);
-        $mailbox->method('inbox')->willReturn($folder);
-
-        $rule = new Rule(
-            name: 'Test',
-            matcher: null,
-            then: static fn (MessageInterface $m): iterable => yield new LogAction()
-        );
-
-        $rules = new Rules($mailbox, [$rule]);
-        $rules->preview(0);
+        self::assertCount(12, $this->rules(12)->preview(0));
     }
 }

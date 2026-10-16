@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MailboxRules\Matcher;
 
 use MailboxRules\Contract\MessageInterface;
+use MailboxRules\ValueObject\EmailAddress;
 
 /**
  * Matches messages based on the sender's email address.
@@ -13,6 +14,8 @@ use MailboxRules\Contract\MessageInterface;
  */
 final readonly class FromMatcher implements Matcher
 {
+    use UnscopedMatcher;
+
     private PatternMatcher $patternMatcher;
 
     public function __construct(string $pattern)
@@ -25,7 +28,7 @@ final readonly class FromMatcher implements Matcher
         $from = $message->from();
 
         // No sender address
-        if (!$from instanceof \DirectoryTree\ImapEngine\Address) {
+        if (!$from instanceof EmailAddress) {
             return false;
         }
 

@@ -23,6 +23,17 @@ final readonly class AnyOfMatcher implements Matcher
         $this->matchers = $matchers;
     }
 
+    public function folderScope(array $folders): array
+    {
+        $scope = [];
+        foreach ($this->matchers as $matcher) {
+            // An unscoped child means the default Folder scope.
+            $scope = [...$scope, ...($matcher->folderScope($folders) ?? [Matcher::DEFAULT_FOLDER])];
+        }
+
+        return array_values(array_unique($scope));
+    }
+
     public function matches(MessageInterface $message): bool
     {
         return array_any($this->matchers, fn ($matcher) => $matcher->matches($message));
