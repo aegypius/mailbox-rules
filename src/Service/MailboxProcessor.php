@@ -13,7 +13,9 @@ use MailboxRules\ValueObject\MailboxConfiguration;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-/** The only place a Rules is built. */
+/**
+ * The only place a Rules is built.
+ */
 final readonly class MailboxProcessor
 {
     private MailboxFactoryInterface $mailboxFactory;

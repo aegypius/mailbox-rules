@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace MailboxRules\Contract;
 
-/** The seam between Rules and a mail account. */
+/**
+ * The seam between Rules and a mail account.
+ */
 interface MailboxInterface
 {
     /**

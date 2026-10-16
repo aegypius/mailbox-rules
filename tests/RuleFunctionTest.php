@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Tests;
 
 use MailboxRules\Action;
+use MailboxRules\Action\LogAction;
 use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Model\Rule;
 use PHPUnit\Framework\Attributes\CoversFunction;
-use PHPUnit\Framework\TestCase;
 
-use MailboxRules\Action\LogAction;
+use PHPUnit\Framework\TestCase;
 
 use function MailboxRules\any;
 use function MailboxRules\chain;

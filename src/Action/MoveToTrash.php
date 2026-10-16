@@ -8,7 +8,9 @@ use MailboxRules\Action;
 use MailboxRules\Contract\MailboxInterface;
 use MailboxRules\Contract\MessageInterface;
 
-/** Never creates a Trash Folder: with none and no explicit name, it fails. */
+/**
+ * Never creates a Trash Folder: with none and no explicit name, it fails.
+ */
 final readonly class MoveToTrash implements Action
 {
     public function __construct(

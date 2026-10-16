@@ -10,7 +10,9 @@ use MailboxRules\Matcher\Matcher;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-/** Walks the Folders targeted by Rules; each mode supplies only its per-message step. */
+/**
+ * Walks the Folders targeted by Rules; each mode supplies only its per-message step.
+ */
 final class Traversal
 {
     /**

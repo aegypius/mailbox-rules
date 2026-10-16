@@ -16,7 +16,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/** anyOf branches without a folder() run in INBOX; branches with one run in that Folder. */
+/**
+ * anyOf branches without a folder() run in INBOX; branches with one run in that Folder.
+ */
 #[CoversClass(Rules::class)]
 final class RulesWithMixedAnyOfBranchesTest extends TestCase
 {
