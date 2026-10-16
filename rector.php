@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
 use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
-use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\Set\ValueObject\LevelSetList;
 
 return RectorConfig::configure()
@@ -29,8 +28,8 @@ return RectorConfig::configure()
     )
     ->withSets([
         LevelSetList::UP_TO_PHP_85,
-        PHPUnitSetList::PHPUNIT_120,
     ])
+    ->withComposerBased(phpunit: true)
     ->withSkip([
         RenameParamToMatchTypeRector::class => [
             // Avoir using undescriptive parameter name in the functions helpers

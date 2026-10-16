@@ -170,7 +170,7 @@ rule(string $name, callable $callback): Rule
 - **Configuration**: `rector.php`
 - **Target**: PHP 8.5
 - **Paths**: `src/`, `tests/`, `.dagger/src/`
-- **Sets**: Dead code removal, code quality, coding style, type declarations, privatization, naming, instanceof, early return, strict booleans, PHPUnit 12.0
+- **Sets**: Dead code removal, code quality, coding style, type declarations, privatization, naming, instanceof, early return, strict booleans, PHPUnit sets for the installed version (`withComposerBased(phpunit: true)`)
 - Run with `--dry-run` first to preview changes before applying
 
 ## Architectural Patterns
@@ -214,14 +214,14 @@ return mailbox("imap://user:pass@host:port/INBOX", [
 - **Cache**: `.phpunit.cache/`
 - **Strict Mode**: Enabled (fails on risky tests, warnings, deprecations)
 - **Coverage Metadata**: Required and strictly enforced
-- **Execution Order**: Dependencies first, then defects
+- **Execution Order**: Defects first; test dependencies resolved (PHPUnit default)
 
 ### Test Patterns
 
 Currently minimal test coverage. When adding tests:
 - Place in `tests/` directory
 - Use PSR-4 namespace `Tests\`
-- Follow PHPUnit 12.x conventions
+- Follow PHPUnit 13.x conventions
 - Ensure coverage metadata is present
 
 ### Test Quality Requirements
@@ -311,8 +311,8 @@ Both use Dagger for GitHub v8.0.0.
 Located in `.dagger/src/PhpProject.php`
 
 **Functions:**
-- `check-coding-standards`: Runs ECS in PHP 8.3 container
-- `test`: Runs PHPUnit in PHP 8.3 container
+- `check-coding-standards`: Runs ECS in PHP 8.5 container
+- `test`: Runs PHPUnit in PHP 8.5 container
 - Both use `composer:2` to install vendors first
 
 ## Git Commit Conventions
@@ -347,7 +347,7 @@ Configured in `.pre-commit-config.yaml`:
 ### Development Dependencies
 
 - `phpstan/phpstan`: Static analysis
-- `phpunit/phpunit`: Testing framework (v12.1+)
+- `phpunit/phpunit`: Testing framework (v13+)
 - `symplify/easy-coding-standard`: Code style checking
 - `rector/rector`: Automated refactoring and PHP upgrades
 - `symfony/var-dumper`: Debugging
