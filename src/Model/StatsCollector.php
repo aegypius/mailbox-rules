@@ -6,7 +6,9 @@ namespace MailboxRules\Model;
 
 final class StatsCollector
 {
-    /** @var array<string, array{eval: int, match: int, actions: int, failures: int, time_ms: float}> */
+    /**
+     * @var array<string, array{eval: int, match: int, actions: int, failures: int, time_ms: float}>
+     */
     private array $data = [];
 
     public function reset(): void
@@ -17,7 +19,13 @@ final class StatsCollector
     public function recordEvaluation(string $ruleName, bool $matched, int $actions, int $failures, float $matcherTimeMs): void
     {
         if (!isset($this->data[$ruleName])) {
-            $this->data[$ruleName] = ['eval' => 0, 'match' => 0, 'actions' => 0, 'failures' => 0, 'time_ms' => 0.0];
+            $this->data[$ruleName] = [
+                'eval' => 0,
+                'match' => 0,
+                'actions' => 0,
+                'failures' => 0,
+                'time_ms' => 0.0,
+            ];
         }
 
         $this->data[$ruleName]['eval']++;
@@ -30,7 +38,9 @@ final class StatsCollector
         }
     }
 
-    /** @return list<RuleExecutionStats> */
+    /**
+     * @return list<RuleExecutionStats>
+     */
     public function all(): array
     {
         return array_map(

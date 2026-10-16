@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Model;
 
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AnyMatcher;
 use MailboxRules\Matcher\Matcher;
 use MailboxRules\Model\Rule;

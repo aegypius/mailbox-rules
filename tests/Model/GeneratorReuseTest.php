@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Model;
 
 use DirectoryTree\ImapEngine\Mailbox;
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action\LogAction;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Model\Rule;
 use MailboxRules\Model\Rules;
 use PHPUnit\Framework\Attributes\CoversClass;

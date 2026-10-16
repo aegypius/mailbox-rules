@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action\MoveToTrash;
+use MailboxRules\Contract\MessageInterface;
 
 use function MailboxRules\mailbox;
 use function MailboxRules\rule;

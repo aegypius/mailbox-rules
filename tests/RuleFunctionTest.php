@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Model\Rule;
 use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;

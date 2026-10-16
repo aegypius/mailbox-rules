@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Action;
 
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action\MarkAsUnread;
+use MailboxRules\Contract\MessageInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

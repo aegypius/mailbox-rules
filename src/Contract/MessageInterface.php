@@ -11,13 +11,19 @@ interface MessageInterface
 {
     public function from(): ?Address;
 
-    /** @return array<Address> */
+    /**
+     * @return array<Address>
+     */
     public function to(): array;
 
-    /** @return array<Address> */
+    /**
+     * @return array<Address>
+     */
     public function cc(): array;
 
-    /** @return array<Address> */
+    /**
+     * @return array<Address>
+     */
     public function bcc(): array;
 
     public function subject(): ?string;
@@ -32,7 +38,9 @@ interface MessageInterface
 
     public function hasAttachments(): bool;
 
-    /** @return array<AttachmentInterface> */
+    /**
+     * @return array<AttachmentInterface>
+     */
     public function attachments(): array;
 
     public function folderPath(): string;

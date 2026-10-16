@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MailboxRules\Model;
 
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Represents a preview of what actions would be executed for a message.

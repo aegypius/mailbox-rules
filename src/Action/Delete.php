@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MailboxRules\Action;
 
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action;
+use MailboxRules\Contract\MessageInterface;
 
 /**
  * Action that permanently deletes a message.

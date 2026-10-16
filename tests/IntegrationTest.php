@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests;
 
 use DirectoryTree\ImapEngine\Address;
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action\Flag;
 use MailboxRules\Action\MarkAsRead;
 use MailboxRules\Action\MoveToFolder;
+use MailboxRules\Contract\MessageInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use function MailboxRules\allOf;

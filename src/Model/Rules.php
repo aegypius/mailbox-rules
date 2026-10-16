@@ -27,7 +27,9 @@ final readonly class Rules
     ) {
     }
 
-    /** @return list<RuleExecutionStats> */
+    /**
+     * @return list<RuleExecutionStats>
+     */
     public function stats(): array
     {
         return $this->statsCollector->all();

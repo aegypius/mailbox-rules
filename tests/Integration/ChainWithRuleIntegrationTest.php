@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
-use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Action\LogAction;
 use MailboxRules\Action\MarkAsRead;
 use MailboxRules\Action\MoveToFolder;
+use MailboxRules\Contract\MessageInterface;
 use MailboxRules\Matcher\AnyMatcher;
 use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;

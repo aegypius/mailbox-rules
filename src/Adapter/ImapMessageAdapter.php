@@ -25,19 +25,25 @@ final readonly class ImapMessageAdapter implements MessageInterface
         return $this->message->from();
     }
 
-    /** @return array<Address> */
+    /**
+     * @return array<Address>
+     */
     public function to(): array
     {
         return $this->message->to();
     }
 
-    /** @return array<Address> */
+    /**
+     * @return array<Address>
+     */
     public function cc(): array
     {
         return $this->message->cc();
     }
 
-    /** @return array<Address> */
+    /**
+     * @return array<Address>
+     */
     public function bcc(): array
     {
         return $this->message->bcc();
@@ -73,7 +79,9 @@ final readonly class ImapMessageAdapter implements MessageInterface
         return $this->message->hasAttachments();
     }
 
-    /** @return array<AttachmentInterface> */
+    /**
+     * @return array<AttachmentInterface>
+     */
     public function attachments(): array
     {
         return array_map(
