@@ -27,7 +27,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         ->public()
         ->arg('$name', 'Mailbox Rules')
         ->arg('$version', '1.0.0')
-        ->call('add', [service(\MailboxRules\Console\ApplyCommand::class)])
+        ->call('addCommand', [service(\MailboxRules\Console\ApplyCommand::class)])
         ->call('setDefaultCommand', ['apply', true])
     ;
 };
