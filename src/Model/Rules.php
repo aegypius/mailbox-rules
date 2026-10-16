@@ -77,48 +77,33 @@ final readonly class Rules
     {
         foreach ($rules as $rule) {
             $startTimeNs = hrtime(true);
-            $matched = false;
             $actionCount = 0;
             $failureCount = 0;
 
-            try {
-                $actions = $rule($message);
+            $actionsList = $rule($message);
+            $matched = $actionsList !== [];
 
-                // Materialize generator into array to avoid "already closed generator" error
-                // when actions modify the message (e.g., move/delete)
-                $actionsList = is_array($actions) ? $actions : iterator_to_array($actions, false);
-                $matched = $actionsList !== [];
-
-                foreach ($actionsList as $action) {
-                    // Cast to callable for PHPStan - all Actions implement __invoke
-                    /** @var callable $callableAction */
-                    $callableAction = $action;
-                    try {
-                        Callback::createFor($callableAction)->invokeAll(
-                            Parameter::union(...$this->useParameters($message))
-                        );
-                        $actionCount++;
-                    } catch (\Exception $actionException) {
-                        $failureCount++;
-                        $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);
-                        throw $actionException;
-                    }
-                }
-
-                if ($matched) {
-                    $this->logger->info('Rule "{rule}" matched message: {subject}', [
-                        'rule' => $rule->name,
-                        'subject' => $message->subject() ?? '(no subject)',
-                    ]);
-                }
-            } catch (\Exception $e) {
-                if (str_contains($e->getMessage(), 'closed generator')) {
+            foreach ($actionsList as $action) {
+                // Cast to callable for PHPStan - all Actions implement __invoke
+                /** @var callable $callableAction */
+                $callableAction = $action;
+                try {
+                    Callback::createFor($callableAction)->invokeAll(
+                        Parameter::union(...$this->useParameters($message))
+                    );
+                    $actionCount++;
+                } catch (\Exception $actionException) {
+                    $failureCount++;
                     $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);
-                    $this->logger->warning(sprintf("Skipping rule '%s' for message: generator already closed. This may happen if the message was moved/deleted by a previous action.", $rule->name));
-                    continue;
+                    throw $actionException;
                 }
+            }
 
-                throw $e;
+            if ($matched) {
+                $this->logger->info('Rule "{rule}" matched message: {subject}', [
+                    'rule' => $rule->name,
+                    'subject' => $message->subject() ?? '(no subject)',
+                ]);
             }
 
             $this->recordStats($rule->name, $matched, $actionCount, $failureCount, $startTimeNs);

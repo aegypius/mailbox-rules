@@ -35,7 +35,7 @@ final class RulesPreviewLimitTest extends TestCase
 
         $rule = new Rule(
             name: 'Test',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static fn (MessageInterface $m): iterable => yield new LogAction()
         );
 
@@ -59,7 +59,7 @@ final class RulesPreviewLimitTest extends TestCase
 
         $rule = new Rule(
             name: 'Test',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static fn (MessageInterface $m): iterable => yield new LogAction()
         );
 
@@ -83,7 +83,7 @@ final class RulesPreviewLimitTest extends TestCase
 
         $rule = new Rule(
             name: 'Test',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static fn (MessageInterface $m): iterable => yield new LogAction()
         );
 

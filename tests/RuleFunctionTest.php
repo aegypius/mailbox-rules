@@ -10,21 +10,22 @@ use MailboxRules\Model\Rule;
 use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 
+use MailboxRules\Action\LogAction;
+
 use function MailboxRules\any;
+use function MailboxRules\chain;
 use function MailboxRules\rule;
 
 #[CoversFunction('MailboxRules\rule')]
+#[CoversFunction('MailboxRules\chain')]
 final class RuleFunctionTest extends TestCase
 {
-    public function testRuleWithCallbackSignature(): void
+    public function testRuleWithoutMatcherIsRejected(): void
     {
-        $rule = rule(
-            name: "Test Rule",
-            then: static fn (MessageInterface $message): iterable => []
-        );
+        $this->expectException(\ArgumentCountError::class);
 
-        $this->assertInstanceOf(Rule::class, $rule);
-        $this->assertSame("Test Rule", $rule->name);
+        // @phpstan-ignore-next-line argument.missing
+        rule(name: "Test Rule", then: static fn (MessageInterface $message): iterable => []);
     }
 
     public function testRuleWithMatcherSignature(): void
@@ -62,5 +63,23 @@ final class RuleFunctionTest extends TestCase
         $result = ($rule)($message);
 
         $this->assertSame($actions, iterator_to_array($result));
+    }
+
+    public function testDirectGeneratorIsReplayableAcrossMessages(): void
+    {
+        $rule = rule(name: "Test Rule", when: any(), then: chain(new LogAction()));
+        $message = $this->createStub(MessageInterface::class);
+
+        $this->assertCount(1, $rule($message));
+        $this->assertCount(1, $rule($message));
+    }
+
+    public function testClosureGeneratorIsReplayableAcrossMessages(): void
+    {
+        $rule = rule(name: "Test Rule", when: any(), then: static fn (): \Generator => chain(new LogAction()));
+        $message = $this->createStub(MessageInterface::class);
+
+        $this->assertCount(1, $rule($message));
+        $this->assertCount(1, $rule($message));
     }
 }

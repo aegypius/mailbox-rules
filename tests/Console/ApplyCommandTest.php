@@ -62,7 +62,7 @@ use MailboxRules\ValueObject\MailboxConfiguration;
 
 $rule = new Rule(
     name: 'Test Rule',
-    matcher: null,
+    matcher: new \MailboxRules\Matcher\AnyMatcher(),
     then: static fn () => yield new MoveToFolder('Archive')
 );
 

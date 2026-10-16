@@ -152,7 +152,7 @@ final class RulesProgressReportingTest extends TestCase
                 $this->callback(static fn (array $ctx): bool => ($ctx['folder'] ?? null) === 'INBOX')
             );
 
-        $rule = new Rule('test', null, static fn (MessageInterface $m): iterable => yield new LogAction());
+        $rule = new Rule('test', new AnyMatcher(), static fn (MessageInterface $m): iterable => yield new LogAction());
         $rules = new Rules($mailbox, [$rule], $logger);
         $rules->watch();
     }

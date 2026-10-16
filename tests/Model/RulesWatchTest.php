@@ -68,7 +68,7 @@ final class RulesWatchTest extends TestCase
     {
         $rule = new Rule(
             name: 'Watch inbox',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static function (MessageInterface $m): iterable { yield new LogAction(); }
         );
 
@@ -106,7 +106,7 @@ final class RulesWatchTest extends TestCase
 
         $rule = new Rule(
             name: 'Inbox rule',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static function (MessageInterface $message) use ($action): iterable {
                 yield $action;
             }

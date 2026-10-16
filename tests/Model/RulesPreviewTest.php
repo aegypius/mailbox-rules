@@ -50,7 +50,7 @@ class RulesPreviewTest extends TestCase
 
         $rule = new Rule(
             name: 'Test Rule',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static fn () => yield new MoveToFolder('Folder')
         );
 
@@ -72,7 +72,7 @@ class RulesPreviewTest extends TestCase
 
         $rule = new Rule(
             name: 'Multi-Action Rule',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static function () {
                 yield new MoveToFolder('Archive');
                 yield new MarkAsRead();
@@ -97,13 +97,13 @@ class RulesPreviewTest extends TestCase
 
         $rule1 = new Rule(
             name: 'Rule 1',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static fn () => yield new MoveToFolder('Folder1')
         );
 
         $rule2 = new Rule(
             name: 'Rule 2',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static fn () => yield new MarkAsRead()
         );
 
@@ -143,7 +143,7 @@ class RulesPreviewTest extends TestCase
 
         $rule = new Rule(
             name: 'Test Rule',
-            matcher: null,
+            matcher: new \MailboxRules\Matcher\AnyMatcher(),
             then: static fn () => yield new Flag()
         );
 
