@@ -5,43 +5,47 @@ declare(strict_types=1);
 namespace Tests\Action;
 
 use MailboxRules\Action\MoveToTrash;
-use MailboxRules\Contract\MessageInterface;
+use MailboxRules\Adapter\InMemoryMailbox;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(MoveToTrash::class)]
 final class MoveToTrashTest extends TestCase
 {
-    public function testMovesToDefaultTrashFolder(): void
+    public function testMovesToTheSpecialUseTrashFolder(): void
     {
-        $message = $this->createMock(MessageInterface::class);
-        $message->expects(self::once())
-            ->method('move')
-            ->with('Trash', false);
+        $mailbox = new InMemoryMailbox();
+        $mailbox->addFolder('[Gmail]/Trash', '\\Trash');
+        $message = $mailbox->deliver('INBOX');
 
-        $moveToTrash = new MoveToTrash();
-        $moveToTrash($message);
+        (new MoveToTrash())($message, $mailbox);
+
+        self::assertSame('[Gmail]/Trash', $message->folderPath());
+        self::assertSame(['INBOX', '[Gmail]/Trash'], $mailbox->folders());
     }
 
-    public function testMovesToCustomTrashFolder(): void
+    public function testFailsAndCreatesNothingWhenThereIsNoTrashFolder(): void
     {
-        $message = $this->createMock(MessageInterface::class);
-        $message->expects(self::once())
-            ->method('move')
-            ->with('[Gmail]/Trash', false);
+        $mailbox = new InMemoryMailbox();
+        $message = $mailbox->deliver('INBOX');
 
-        $moveToTrash = new MoveToTrash(trashFolder: '[Gmail]/Trash');
-        $moveToTrash($message);
+        try {
+            (new MoveToTrash())($message, $mailbox);
+            self::fail('Expected a RuntimeException');
+        } catch (\RuntimeException) {
+            self::assertSame('INBOX', $message->folderPath());
+            self::assertSame(['INBOX'], $mailbox->folders());
+        }
     }
 
-    public function testMovesToTrashWithExpunge(): void
+    public function testExplicitFolderOverridesTheSpecialUseTrash(): void
     {
-        $message = $this->createMock(MessageInterface::class);
-        $message->expects(self::once())
-            ->method('move')
-            ->with('Deleted Items', true);
+        $mailbox = new InMemoryMailbox();
+        $mailbox->addFolder('Bin', '\\Trash');
+        $message = $mailbox->deliver('INBOX');
 
-        $moveToTrash = new MoveToTrash(trashFolder: 'Deleted Items', expunge: true);
-        $moveToTrash($message);
+        (new MoveToTrash(trashFolder: 'Deleted Items'))($message, $mailbox);
+
+        self::assertSame('Deleted Items', $message->folderPath());
     }
 }
